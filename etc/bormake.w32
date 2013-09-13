@@ -1,0 +1,84 @@
+!include <ntwin32.mak>
+
+# Turn off MIPS Debugging Support
+
+!if "$(CPU)" == "MIPS"
+cdebug = 
+cvtdebug = 
+linkdebug =
+!endif
+
+cflags = $(cflags) -DENGLISH
+# Comment out the following to add debug information.
+cdebug = 
+linkdebug = 
+
+MAKE = maker
+HEADERS = readlib.h makemail.h system.h ansi.h qlib.h reader.h 
+OBJECTS = read.obj readlib.obj makemail.obj system.obj ansi.obj qlib.obj text.obj chosetag.obj
+SRC = read.c readlib.c makemail.c system.c ansi.c qlib.c text.c chosetag.c
+
+
+#   *Implicit Rules*
+.c.obj:
+  $(cc) $(cdebug) $(cflags) $(cvars) $*.c > $*.err
+  @combine /a /q $*.err atp.wrn
+  @del /q $*.err
+  
+
+#   *Explicit Rules*
+
+all: atpnt.exe
+
+atpnt.exe: $(OBJECTS) editline\libed32.lib
+  $(cvtobj) $(cvtdebug) *.obj
+  $(link) $(linkdebug) $(conflags) -out:$*.exe @&&|
+$(OBJECTS) $(conlibs) editline\libed32.lib
+|
+
+
+#  *File dependencies*
+
+ansi.obj     : ansi.c ansi.h
+
+chosetag.obj : chosetag.c reader.h 
+
+makemail.obj : makemail.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+qlib.obj     : qlib.c system.h ansi.h qlib.h reader.h readlib.h 
+
+read.obj     : read.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+readlib.obj  : readlib.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+system.obj   : system.c system.h ansi.h 
+
+text.obj     : text.c system.h ansi.h reader.h 
+
+#
+# ----------------------------------------------------------------------
+# libedit.lib provides the command-line editing and history recall.
+
+editline\libed32.lib:
+		cd editline
+		$(MAKE) -Ic:\ntutils\inc -de:\tmp -f makefile.nt
+		cd ..
+	
+clean:
+	del *.obj 
+	del atpnt.exe 
+	
+clobber:
+	del *.obj 
+	del atpnt.exe 
+	del *.bak
+	del *.lib
+	cd editline
+	$(MAKE) -Ic:\ntutils\inc -de:\tmp -f makefile.nt clean
+	cd ..
+
+manifest:
+	dir *.* > Manifest	
+
+#
+#------------------------------- end of makefile ---------------------------

@@ -1,0 +1,62 @@
+# editline library makefile for Microsoft C and Microsoft NMAKE
+# tested with NMAKE Microsoft Program Maintenance Utility Version 1.00
+# tested with Microsoft QuickC Version 2.01
+
+CC	= qcl
+AR	= lib
+AFLAG	= /NOI
+LD	= link
+LDFLAG	= /BA /LI
+DEFS	= /D_ATP16_ /D_MSC_ /D__MSDOS__ /DDESQVP
+LINT	= clint
+LINTFG	= $(DEFS)
+WARN	= /W3
+OFLAGS	= /Ox /Gs
+CFLAGS	= /AL /I.. /Za $(WARN) $(OFLAGS) $(DEFS)
+SRC	= editline.c complete.c sysdos.c
+OBJ	= editline.obj complete.obj sysdos.obj
+RM	= del
+
+all: libedit.lib testit.exe
+
+libedit.lib: $(OBJ)
+	@if exist $@ del $@
+	$(AR) $* $(AFLAG) +editline +complete +sysdos , libedit.map
+
+testit.exe: testit.obj libedit.lib 
+	$(LD) $(LDFLAG) $** , $@ ; 
+
+lint::
+	$(LINT) -T -I.. -oedlint $(LINTFG) editline.c complete.c sysdos.c 
+
+libedit.ln: edlproto.h
+	$(LINT) $(LINTFG) -D__LINTLIB__ edlproto.h -L libedit.ln
+
+clean::
+	$(RM) *.obj
+	$(RM) *.lib
+
+mclean: clean FORCE
+	@if exist edlint $(RM) edlint
+	$(RM) *.ln
+	$(RM) *.map
+
+clobber: clean FORCE
+	$(RM) *.o
+	$(RM) *.a
+	$(RM) *.ln
+	$(RM) *.lst
+	$(RM) *.map
+
+mostlyclean: mclean FORCE
+
+# phony rule is empty and is used to FORCE unconditional build of targets 
+FORCE: ;
+
+editline.obj: editline.c editline.h msdos.h edlproto.h ..\atptypes.h \
+ ../system.h ../globals.h ../reader.h ../readlib.h ../ansi.h
+complete.obj: complete.c editline.h msdos.h edlproto.h ../atptypes.h
+sysdos.obj: sysdos.c editline.h msdos.h
+testit.obj: testit.c editline.h msdos.h edlproto.h ../atptypes.h
+
+# end of Makefile

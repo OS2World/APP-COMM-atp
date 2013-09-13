@@ -1,0 +1,1202 @@
+.ig
+/*
+     ATP QWK MAIL READER FOR READING AND REPLYING TO QWK MAIL PACKETS.
+     Copyright (C) 1992, 1993, 1997  Thomas McWilliams 
+     Copyright (C) 1990  Rene Cougnenc
+   
+     This program is free software; you can redistribute it and/or modify
+     it under the terms of the GNU General Public License as published by
+     the Free Software Foundation; either version 2, or (at your option)
+     any later version.
+     
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU General Public License for more details.
+     
+     You should have received a copy of the GNU General Public License
+     along with this program; if not, write to the Free Software
+     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+..
+.\"
+.\" This file must be pre-processed with tbl or gtbl.
+.\" This file requires the GNU groff tmac.an man page marcros
+.\"
+.\"
+.\" Define a couple useful macros for the tt font.
+.\"
+.de TT
+.it 1 an-trap
+.ft CW
+.if \\n[.$] \&\\$*
+..
+.de TTR
+.ds an-result \&
+.while \\n[.$]>=2 \{\
+.	as an-result \f(CW\\$1\fR\\$2
+.	shift 2
+.\}
+.if \\n[.$] .as an-result \f(CW\\$1
+\\*[an-result]
+.ft R
+..
+.\"
+.\" here is the start of man page proper
+.\"
+.TH ATP 1 "4 January 1997" "ATP 1.50" "ATP QWK Mail/News Reader"
+
+.SH NAME
+atp \- read, reply, and archive QWK format mail packets.
+
+.SH SYNOPSIS
+.BI atp " bbsname"\c
+.RI [ .qwX ]
+.sp
+where 
+.I bbsname 
+is the name of the QWK packet with extension omitted. 
+The long form uses
+.IR bbsname.qwX " where " X
+is any valid filename character, typically the letter `k' or a 
+digit in the range `0' to `9'. 
+
+.SH DESCRIPTION
+ATP is used for reading and replying to messages contained in QWK mail
+packets which are available through public access bulletin boards. ATP
+evolved from an earlier reader written by Rene Cougnenc which he called
+`AzerTyuioP' (the name `AzerTyuioP' is the top row of keys on a French
+typewriter).  ATP has greatly enhanced and expanded upon the
+functionality of its predecessor. But like its predecessor, ATP still
+may be compiled for the French language. German is now also supported.
+ATP includes the Rich Salz and Simmule Turner
+Emacs-style command line editor with command history. Note that this is
+covered by a separate copyright.
+
+.PP
+A BBS will typically carry topical news conferences. A user may dial up
+a BBS, start a program know as a mail door, and quickly gather the
+current news into a file called a ``QWK packet.'' Once this file is
+downloaded, an offline mail reader such as ATP processes it for reading
+and replying at one's leisure.  There are several formats for offline
+mail packets but QWK is the most common. Some of the more popular QWK
+mail doors which produce these packets are Qmail, Markmail, Jimmer, and
+TQM.  ATP can handle QWK packets produced by any of these doors so there
+is no need to worry which one to use.
+
+.PP
+When started, ATP will present you with a command prompt. This prompt
+will show the current active BBS and the conference. At any time you may
+type `help' at the command prompt to receive a summary of commands. ATP
+also functions as a mini-shell allowing you to enter many common Unix
+commands at the prompt.
+
+.SH FEATURES
+In addition to reading and replying to mail, ATP maintains archives of
+past messages. These can be reviewed at any time. As new QWK packets are
+loaded, they are immediately added to the archives. Pointers to the last
+read messages are maintained. Loading a new mail packet will not reset
+these pointers. Reading will resume with the last read message in each
+conference. By entering a number at the command line, ATP will move to
+that message number and display it. In this way you can move backward
+and forward among the messages at will. Typing `reset' resets the the
+message pointer, marking the current message as the last message read.
+The `clean' command provides a means of maintaining and pruning message
+bases.
+
+.PP
+ATP will support 8192 conferences per BBS. The limit is set for backward
+compatibility with some older mail doors. You may change this limit by
+recompiling ATP should the need arise.  Your tagline file can hold many
+thousands of taglines, essentially no limit for most purposes.  Taglines
+are stored in a the plain text file 
+.IR taglines.atp .
+
+.PP
+Other features include the ability to scan message headers, a tagline
+management system, support for FIDO or regular style taglines,
+personal mail notification and personal mail conference, the ability to
+search messages for strings, a separate conference for replies, kill and
+change security on replies, tagline selection by random, automatic, or
+direct means, hooks for a spelling checker, powerful command line editing
+with history recall. 
+
+.SH ENVIRONMENT 
+ATP looks for three environment variables: 
+.TTR SHELL ,
+.TTR HOME ,
+and 
+.TTR ATP .
+The 
+.TT SHELL 
+environment variable must reflect the path to your command shell
+(under MSDOS and OS/2 this path would be called 
+.TT COMSPEC 
+instead).  The 
+.TT HOME 
+environment variable points to your home directory.  Some command
+processors will automatically set
+.TTR SHELL " and " HOME 
+for you.  The 
+.TT ATP 
+environment variable should be the full path to a subdirectory
+where ATP will store its configuration files, normally a subdirectory
+under your home directory. Use a descriptive name such as `atpmail' or
+`qwkmail' for this directory. As you probably know, environment variables
+most often are set by adding entries to your command shell's startup file
+(.e.g. 
+.IR .profile " or " autoexec.bat ).
+
+.SH CONFIGURATION
+Before using ATP for the first time, you will have to edit its 
+configuration file which you may call either
+.I .atprc 
+or 
+.IR atprc .
+This file contains a list of information which tells ATP where to find
+your mail packets, what editor to invoke for entering messages, how
+many lines your screen has. Below is a typical configuration file.
+IMPORTANT! A space 
+.I must 
+reside on either side of the
+`=' sign for correct parsing to take place. After you have edited your 
+.I atprc 
+configuration file, don't forget to put it in the same
+directory as pointed to by the 
+.TT ATP 
+environment variable, or your
+home directory. If you have a 
+.B Perl 
+interpreter installed on your system, you can use the script
+.I atpdiag
+to check your installation and configuration. See
+.BR atpdiag(1) 
+for details.
+
+.ft CW 
+.nf
+
+# -------------------------------------------------------
+# sample atprc ATP configuration file
+#
+user = PAUL DRAKE
+editor = vile
+reply =  /usr/spool
+mail  =  /usr/spool
+archiver = zip -jk
+unarchiver = unzip -Lxjo
+speller = ispell
+ansi = on
+bell = on
+color = on
+graphics = on
+charset = latin1
+screenlen = 25
+screencol = 80
+qlist = ls -lt *.qw? | cut -c 34- | less
+blist = ls -lt blt* | cut -c 34- | less
+tagstyle = fido  
+tagline = Why buy a cow when the milk is free?
+autotag = on
+workpath = /tmp
+truncate = 50
+pcb = on
+header = off
+#  end of sample atprc ATP configuration file
+# ------------------------------------------------------
+
+.fi
+.ft R
+
+.TP 5
+.B user
+.br
+Your name goes here. It must be spelled exactly as it appears
+on the bulletin boards where you are registered. 
+
+.TP 5
+.B editor
+The name of the editor which you will use to edit your replies.
+
+.TP 5
+.B reply
+This is the path to your directory where you keep reply packets for
+uploading.
+
+.TP 5
+.B mail
+.br
+This is the path to your directory where downloaded message packets are
+kept.
+
+.TP 5
+.B archiver
+This is the name of the program used to prepare your reply packet
+for uploading. Normally this is 
+.BR zip . 
+When using the Info-Zip version, the switches `-jk' tell 
+.B zip 
+to create archives without pathnames and to emulate PKzip. These switches
+aren't absolutely needed put could be helpful in certain situations.
+Please acquire the most recent versions of 
+.BR zip
+and
+.B unzip 
+for your system which are compatible with the BBSs which you frequent. The
+Info-Zip package is highly recommended.
+
+.TP 5
+.B unarchiver
+This is the name of the program used to extract the data files from your
+QWK mail packets. Normally this would be 
+.BR unzip . 
+The sample
+.I atprc
+assumes the freeware Info-Zip version of
+.BR unzip . 
+The switches `-Lxjo' tell it to extract files while junking path names,
+convert MSDOS file names to lower case, and to overwrite existing files
+without prompting. These switches may not always be necessary but may be
+helpful in certain situations. Use appropriate switches for the brand of
+unarchiver you are using.
+
+.TP 5
+.B speller
+This line defines the name of the spelling checker you wish to use to
+check the spelling of your replies. The program 
+.I ispell
+is recommended because of its interactive design. It is available in 
+source code form via anonymous ftp from 
+.TTR prep.ai.mit.edu:/pub/gnu . 
+
+.TP 5
+.B ansi
+.br
+This configuration switch can be set to either `on' or `off'. It defaults
+to `off' but most users should set this to `on'. This controls the
+placing of the cursor on the screen and other screen attributes.
+Note that if `ansi' is set `on' you must have a terminal capable of
+handling ANSI sequences. MSDOS users will want to add the line
+.TT DEVICE=ANSI.SYS
+to their 
+.I config.sys 
+file in order to use this feature. Many common terminals support ANSI
+such as the popular VT102 and VT220 terminals. The Linux console also
+supports ANSI, as do many other PC unixes, and OS/2. So if you fall into
+any of these categories, please set `ansi' to `on'.
+
+.TP 5
+.B bell 
+.br
+This configuration switch can be set to either `on' or `off'. It determines
+if ATP will use the terminal bell. If you desire silent operation, 
+set bell to `off'.
+
+.TP 5
+.B color
+ATP will support color on ANSI terminals. Setting color `on' will enable
+ANSI color. You must have the ATP `ansi' variable set to `on' also.
+If you have a monochrome terminal you may find that setting
+color to `off' gives a more readable screen. Experiment and see.
+
+.TP 5
+.B graphics
+When graphics is set to `on' ATP will use VT102 line graphics characters
+to emulate the MSDOS line graphic character set. Linux users will want to
+set this `on'. If your terminal or system console is unable to display the
+VT102 line graphics set then set this `off'.
+.sp
+If you want to see if your terminal is capable of displaying VT102 
+graphics, type the command `graphics' at the ATP command line. It will
+toggle this mode on and off, displaying a boxed message. If you toggle
+graphics `on' and instead of a pretty graphics box on a reverse
+field you view an ugly box composed of q's and a's then you may safely
+assume that your terminal will not support VT102 line graphics.
+.sp
+Note: not all VT102 class terminals have the line graphics option.
+Note too that line graphics is independent of which character set you choose.
+If your terminal uses the MSDOS character set and displays it correctly,
+there is little point in choosing this option. However, just because your
+operating system is running on a PC, 
+.I do not 
+assume that is uses the MSDOS character set.
+
+.TP 5
+.B charset
+Most QWK packets use the MSDOS character set to represent foreign
+language and line graphics characters. If your system does then you
+should set charset equal `msdos' and `graphics' to `off'. However most
+Unix systems do not recognize the MSDOS character set mappings. If
+your terminal or console uses ISO standard LATIN1 character set (e.g.
+Linux) then you will want to set charset equal to `latin1'. If your
+system is unable to display any 8 bit characters you will want to set
+this to `7-bit' (8 bit characters will then be mapped to their closest
+7-bit counterpart). Please see the file
+.I atprc 
+for more details. Here is a table of some suggested settings: 
+.sp
+
+.ce 2
+TABLE 1
+CHARACTER SET OPTIONS FOR ATPRC VARIABLES
+.TS
+center, box, tab(@) ;
+a | a | a .
+ system@charset@graphics
+_
+ Linux @ latin1 @ on
+ VT102 @ 7-bit @ on
+ generic @ 7-bit @ off 
+ OS/2 @ msdos @ off 
+ 386bsd @ msdos @ off
+ MS-DOS @ msdos @ off
+.TE
+
+.TP 5
+.B screenlen
+This configuration setting tells ATP how many lines your screen uses.
+This depends on the type of video card which you are using and also
+on the type of terminal emulation which you have selected. Valid entries
+are in the range of 3 to 300. If ATP is unable to automatically detect
+your screen size, it will fallback to these values.
+
+.TP 5
+.B screencol
+This configuration setting tells ATP how many columns your screen uses.
+This depends on the type of video card which you are using and also
+on the type of terminal emulation which you have selected.
+Typical entries are 80 columns. Some terminals will support 132 columns too.
+If ATP is unable to automatically detect
+your screen size, it will fallback to the value you specify here.
+
+.TP 5
+.B qlist
+Used for listing QWK packets.
+This configuration entry is a command line which will be executed anytime
+you type `qlist' at the ATP prompt. ATP will change to your mail path
+directory and execute this command line. The example here when invoked
+will list all the QWK packets in your mail directory sorted by time
+and only displaying the size, date, and name of the packets. It is 
+piped into `less' which is the GNU version of `more'. You may delete
+this entry or modify it if it doesn't do what you want. A simple 
+default entry is already set internal to ATP.
+
+.TP 5
+.B blist
+ATP can display bulletins delivered with the mail packet. The `blt' 
+command uses the string specified here, passing it to the shell to 
+list your bulletins.  You will want to modify this entry depending
+on your operating system. After you have viewed the list of available
+bulletins, view a bulletin by typing its name at the command line.
+
+.TP 5
+.B tagstyle
+This switch sets the default style used in your message taglines. 
+It defaults to normal. By setting this to `\c
+.TTR "tagstyle = fido" ',
+atp will start up using FIDOnet style taglines. See later
+section on taglines for more information.
+
+.TP 5
+.B tagline
+This is used to set your persistent tagline which can always be called
+back immediately from the command line. See section on taglines for details.
+
+.TP 5
+.B autotag
+By default, ATP will randomly select taglines for your replies. The
+taglines are stored in the text file 
+.I taglines.atp 
+located in the same directory as your atprc. Automatic selection of
+taglines may be turned off from the command line or by setting autotag
+to `off'.
+
+.TP 5
+.B workpath
+This option is not usually needed. However, if you need the ATP work
+directory to be on some particular path or drive specify it here.
+OS/2 and MSDOS users can specify a disk drive by specifying the drive
+letter. See example in 
+.IR atprc .
+
+.TP 5
+.B truncate
+Under ATP there is a `clean' command that will put you into maintenance
+mode for your message bases. One of the options is to truncate a 
+message base to the most recent messages. This option sets the
+default truncation length. This truncate option can be changed during the
+maintenance process if the need should arise.
+
+.TP 5
+.B pcb 
+.br
+The BBS known as PCBoard supports long subject lines as of PCB version
+15.  If you would like to have long subject lines then set this option
+on. Note that not all QWK readers will be able to read your entire
+subject line because most readers are limited to 25 characters. But
+generally there should be no problem. Note that if you use the RIME
+network that you should not use a long subject line when entering a
+routed message, i.e. a message where the first line must read something
+like
+.TTR \->156<\- . 
+If this option is enabled and you enter a reply subject line less than
+25 characters in length, behavior defaults to normal QWK conventions.
+
+.TP 5
+.B header
+When replying to a message, ATP generates a reply header which
+mentions the author of the message being responded to. If you wish
+to have no headers then set the header option off in your 
+.IR atprc .
+
+.SH SHELL SYSTEM COMMANDS
+When at the ATP command prompt, you will be able to execute many
+common Unix commands directly: cat, cd, cp, echo, df, du, less, ln, lpr,
+ls, man, mkdir, more, mv, pwd, cwd, rm, rmdir, set, sort, sync. 
+
+.PP
+Under the MSDOS version the following commands are available: 
+cd, chkdsk, copy, del, dir, md, mem, more, mkdir, print, rd, rmdir, set,
+sort, type, xcopy.
+
+.SH COMMANDS SUMMARY
+What follows is a summary of the commands available inside ATP. The
+most important are: `load', `review', `j',`n',`r', `e', and `qscan'.
+These will be presented first. Remember that you may always type `help'
+for a brief summary of commands.
+
+.TP 5
+.B help   
+.br
+The `help' command will display a brief summary of available commands.
+
+.TP 5
+.BI load " bbsname"
+.br
+This command is used to get a QWK packet from your spool directory and load
+it into the reader for viewing. It takes one argument, the name of the BBS
+or the explicit name of the mail packet. If you just give the name of the
+BBS, ATP will search for the packet named
+.IR bbsname.qwk . 
+You may also name the packet explicitly (e.g.
+.IR bbsdeguy.qwk , " joesbbs.qw5" , " etc." ).
+.sp
+Example:
+.TT \	load zer0g.qw4
+
+.TP 5
+.BI review " bbsname"
+The review command is used for reviewing the BBS archives
+previously loaded into the reader. It takes one argument, the name of the
+BBS without any extension. DO NOT add the `qwk' file extension with this 
+command. The short form of this command is `rev'. 
+.sp
+Example:
+.TT \	rev hobbits
+
+.TP 5
+.B <cr>
+.br
+A carriage return alone will read the next message.
+
+.TP 5
+.B j\c 
+.RI [ " conference_name " | " conference_number " ]
+.br
+The `j' command stands for `join' and it is used for changing conferences.
+It must be followed by either the conference name or the conference number.
+
+.TP 5
+.B n
+The `n' command will join the next active conference.
+
+.TP 5
+.B a
+The `a' command will display the current message again.
+
+.TP 5
+.B +
+The `+' command will go forward one message.
+
+.TP 5
+.B \-
+The `\-' command will go backward one message.
+
+.TP 5
+.B r
+The `r' command is used to enter a reply to the current message.  You
+may redirect a reply to a different message area by following `r' with
+the name of the new area where the reply should be posted.  When
+entering a reply, you are always prompted to allow changing of the
+subject, address, and security information. When prompted for security
+you may answer `n' or `r' which respectively stand for `none' and
+`receiver only' (private message) security.
+
+.TP 5
+.B x
+The `x' command is used to crosspost a reply to another area. To use
+this command, go to the reply conference and select the reply you wish
+to crosspost. Type `x' followed by the conference number or conference
+name where you wish to post a new copy of the reply.
+
+.TP 5
+.B c
+The `c' command is used to enter changes to a previous reply. This command
+Is valid only in the replies conference. It will re-invoke the editor for
+the current message. The old message is killed along with its tagline. The
+tagline active at the time this command was invoked will be the new tagline
+for the edited reply. Note that that in the context of the reply conference,
+the `e' command has the same effect as the `c' command\(emchange a reply.
+
+.TP 5
+.B p
+The `p' command is used to toggle message security between `private' and
+`public' for your reply messages. When a message is private, a warning
+to this affect will be highlighted in the bottom right of the message
+header.
+
+.TP
+.B e\c 
+.RI [ " conference_name " | " conference_number " ]
+.br 
+The `e' command with no arguments will enter a message in the current
+conference. Again, choose your tagline before entering your message.
+The `e' command may be followed optionally by the name or number of the
+conference where you would like to enter your message. Upon invoking `e'
+you will be presented some choice as to subject, addressee, and message
+security.
+.sp
+Note that this command behaves differently if the current conference is
+either the REPLY or PERSONAL conference. If you are in the PERSONAL
+message conference, this command is completely disabled because it makes
+no sense to enter a message in the personal conference (you CAN reply to
+messages though--use the `r' command). If you are in the REPLY conference,
+this command will re-edit the current message. It does not enter a new
+message.
+
+.TP 5
+.B head
+.br
+The `head' command will toggle the automatic reply header on and off.
+The reply header is a sentence at the top of a quoted reply message
+which will mention the name of the author of the quoted message, who
+it was written to, and on what date it was written. If you don't want
+this style in your replies then you may turn it off with the 
+head command or just edit it out when composing your reply.
+
+.TP 5
+.B reset
+The `reset' command is used to set the conference message pointer to
+the highest message
+which you have read. It looks at the value of the current message and
+resets the highest read pointer to that value. This is useful if you
+wish to quit in the middle of re-reading a conference but would like
+to save your place marker.
+
+.TP 5
+.B scan
+.br
+Will scan forward from the current message displaying message headers.
+You will be prompted after each screen whether you
+wish to continue scanning.
+
+.TP 5
+.B qscan
+Quick scan is the same as scan except it will only display a single
+line abbreviated header.
+
+.TP 5
+.B conf
+The conf command will display a list of all available conferences on a
+particular BBS.
+
+.TP 5
+.B ts 
+The `ts' is text search command, an alias for `find', see below.
+
+.TP 5
+.B find
+The `find' command will search the current conference for any text that
+follows it. Wildcards are not supported, and it is not case sensitive.
+For example:
+.ft CW
+.nf
+\ 
+\	find\ paul\ drake 
+\ 
+.fi
+.ft R
+will display messages containing the text ``Paul Drake'' or ``PaUl dRakE''
+and so on. After finding some text, use the `next' command to repeat the
+search.  Note that any spaces after the first one following `find' are
+significant.  Thus,
+.ft CW
+.nf
+\  
+\	find\ paul\ drake
+\  
+.fi
+.ft R
+is 
+.I NOT 
+the same as
+.ft CW
+.nf
+\  
+\	find\ \ \ \ \ \ paul\ drake 
+\ 
+.fi
+.ft R
+
+.TP 5
+.B next
+.br
+The `next' command is used to repeat the search initiated by the `find' command.
+If your version of ATP supports function keys, pressing F10 is equivalent
+to typing this command. To abort search, type control-C.
+
+.TP 5
+.B qlist
+The qlist command will display a list of all QWK packets in your mail
+directory. See the configuration section for details.
+
+.TP 5
+.B clean 
+The clean command will allow you to do maintenance on your message bases.
+You will be able to delete, truncate, or purge messages marked as killed.
+Use the `k' command while reading messages to mark a message as killed.
+Set the default truncation length for maintenance in your 
+.IR atprc . 
+This number is changeable from inside the clean command should you need that
+flexibility.
+
+.TP 5
+.B rot
+The rot command will filter the current message through a Usenet
+standard rot-13 text filter. Invoking the rot command twice will restore
+the original message. Rot-13 encoding is sometimes used to shield
+offensive material from being accidentally read. It is not a secure
+cypher, and it is not intended to be.
+
+.TP 5
+.B !\c
+.RI [ " shell_command " ]
+.br
+Without arguments, this command will shell you out of the program into
+the system. Type `exit' to return. You may also follow this command with any
+valid command line which your operating system's command processor will 
+recognize.
+
+.TP
+.B cls
+Will clear the screen display.
+
+.TP
+.B pcb 
+Will toggle support for PCBoard long subject lines. 
+
+.TP 5
+.B time
+Will display the current date and time.
+
+.TP 5
+.B date
+Will display the current date and time
+
+.TP 5
+.B fido
+The `fido' command will toggle the current tagline style. See section on
+taglines for more information.
+
+.TP 5
+.B last 
+The `last' command will display the end message in a conference. 
+
+.TP 5
+.B news
+The `news' command will display the current news file from the BBS.
+
+.TP 5
+.B welcome
+The `welcome' command will display the current board's welcome message.
+
+.TP 5
+.B files
+The `files' command will display the new files list from the current BBS.
+
+.TP 5
+.B blt
+The `blt' command will display a list of available bulletins from the
+current BBS. To display a particular bulletin just enter its file name.
+
+.TP 5
+.B hello
+The `hello' command will display the BBS Welcome message.
+
+.TP 5
+.B goodbye
+The `goodbye' command will display the BBS goodbye message.
+
+.TP 5
+.B door
+The `door' command will display the BBS door id and version (if it
+was included in the mail packet).
+
+.TP 5
+.B m
+The `m' command will toggle the ansi mode on and off.
+
+.TP 5
+.B g
+The `g' command will quit ATP.
+
+.TP 5
+.B q
+The `q' command will quit ATP. It is the same as the `g' command.
+
+.TP 5
+.BI s " filename "
+.br
+The `s' command will save the current message to a specified text file.
+If the file exists, the message will be appended to the end.
+
+.TP
+.B tag
+The `tag' command is used to set tagline options. See the section below
+on taglines for details. 
+
+.SH TAGLINES
+ATP supports either FIDO or regular style taglines. In addition
+ATP uses three types of taglines: persistent, run-time, list. You have
+1 persistent and 1 run-time tagline. Your list taglines must be
+kept in the file 
+.I taglines.atp 
+which should be in the same directory
+as your 
+.IR atprc . 
+The purpose of the persistent tagline is that it is always there for you
+to recall and use. You may choose to use other taglines but the
+persistent tagline will still be there when you want it. The run-time
+tagline is one you yourself enter at the command line.  Should a  bit of
+whimsy strike you, you can use it right away without editing the tagline
+file.  At any one time there is only one active tagline which may be
+viewed by typing the command `tag ?'. Before entering your message
+choose your active tagline. You may pick from the list, use your
+persistent tagline, or type a run-time defined tagline at the prompt.
+You also have the choice of toggling FIDO or regular style tagline by
+typing the command `fido' at the command line. Here is a summary:
+
+.TP 5
+.B persistent
+Defined after the `\c
+.TT tagline =\c
+\&' statement in the configuration file. This
+tagline is stored in a stack with the run-time tagline. Typing
+`tag swap' will copy the stack into the current active
+tagline. Typing `tag swap' twice in a row will roll the stack. The persistent
+tagline is good for a tagline which you regularly use such as one containing
+place of message origin.
+
+.TP 5
+.B run-time
+Defined at the ATP command line. If you feel like adding an impromptu 
+tagline just type `tag' followed by your text.
+.sp
+Example:
+.TT \	tag Laurel and Hardy fan club
+.sp
+This above example command will change the active tagline to:
+.sp
+.TT \ ...
+.br
+.TT \ \ * ATP/Linux 1.50 * Laurel and Hardy fan club.   
+.sp
+
+.TP 5
+.B list
+.br
+A list type tagline is just a tagline stored in the plain text file
+.IR taglines.atp .
+If you have selected the auto tagline feature, ATP will
+choose a tagline at random from your 
+.I taglines.atp 
+file every time you enter a reply. You may also type `tag random' at the
+command prompt to re-select at any time. Taglines may also be selected
+directly. Type `tag list' to view your list of taglines, and then type
+`tag
+.IR n ' 
+to choose a numbered tagline directly (where `\c
+.IR n ' 
+would be the number of the tagline in the list as it
+is viewed). If you wish to add or delete taglines from 
+.I taglines.atp 
+you should use your favorite text editor. 
+
+.SH TAGLINE COMMAND
+The `tag' command is the basic command for setting and changing
+taglines. ATP echoes any changes in tagline to the screen so you
+may be certain as to what the current tagline is. If in doubt, just
+type `tag ?'. Here are the possible variations on `tag':
+
+.TP 5
+.B tag help
+The `tag help' command will display the special help menu for 
+taglines.
+
+.TP 5
+.B tag swap
+The `tag swap' command will swap move either the persistent or the
+run-time defined tagline into the current tagline buffer. Any list
+defined tagline will be removed from the buffer. Alternately typing
+`tag swap' will toggle the current tagline between persistent and run-time
+defined.
+
+.TP 5
+.B tag steal
+The `tag steal' command will append the tagline in the current message
+to your taglines.atp file. This feature only works on messages which
+follow the PCBoard BBS style of taglines. For Fido taglines use the
+`tag add' command.
+
+.TP 5
+.B tag add 
+The `tag add' command allows you to type in a tagline which will
+then be appended to your 
+.I taglines.atp 
+file. This feature is useful for Fido style taglines which are not so
+easily captured by the `tag steal' command.
+
+.TP 5
+.B tag list
+The `tag list' command will display a list of all available taglines.
+
+.TP 5
+.BI tag " n"
+The `tag 
+.IR n ' 
+command will set the current tagline to the tagline in the
+list designated by the number `\c
+.IR n '.
+
+.TP 5
+.B tag ?
+The `tag ?' command will display the current tagline.
+
+.TP 5
+.B tag auto
+The `tag auto' command will toggle automatic tagline selection ON or OFF.
+
+.TP 5
+.B tag random
+The `tag random' will choose a random tagline for you. 
+It may be used with either automatic selection disabled or
+enabled. The auto tagline mode itself uses this command after every reply to 
+regenerate a new tagline. Try it out a few times to familiarize yourself
+with it.
+
+.TP 5
+.B tag off 
+The `tag off' command will disable taglines. 
+
+.TP 5
+.B tag on 
+The `tag on' command will re-enable taglines. 
+
+.TP 5
+.B fido
+This is a command which toggles the tagline style between FIDO style
+taglines and regular style. This is provided because FIDOnet has
+specific rules about tear lines and high ascii characters. Here is an
+example of a regular tagline followed by an example of a FIDO style
+tagline:
+.sp
+.TT \ ---
+.br
+.TT \ \ \(sq ATP/Linux 1.50 \(sq  This is a regular style tagline.
+.sp
+.TT \ ...
+.br
+.TT \ \ * ATP/Linux 1.50 *  This is a FIDO style tagline.
+.sp
+
+.SH SPECIAL KEYS
+With release 1.4 some support for special keys have been added.
+This is still being developed and may change. If you would like to
+try the special keys here are the mappings. Note: support now is
+only for VT102, Linux, OS/2, and MSDOS consoles.
+.nf
+  
+ key          command
+-------------------------------------------------------------
+ <f1>         help
+ <f2>         tagline help
+ <f3>         view taglines
+ <f4>         list available QWK packets
+ <f5>         show terms of license
+ <f10>        `next' for text search. 
+ <home>       goto first message in conference [keypad upper left]
+ <end>        goto last message in conference [keypad lower left]
+ <page up>    view messages in reverse order [keypad upper right]
+ <page dn>    view messages in forward order [keypad lower right]	
+ <keypad `5'> `N' either `next' or `no' (depends on context)
+ <up arrow>   recall previous command in history
+ <down arrow> recall next command in history 
+
+.fi
+
+.SH COMMAND LINE EDITOR
+ATP uses the Rich Salz and Simmule Turner command-line editor. This
+provides a simple but powerful emacs-like command-line editing interface
+to its users.  Previous commands may be recalled by scrolling through
+the command history with the arrow keys. A line may be edited before it
+is sent by typing either control characters or escape sequences. A
+control character, shown as a caret followed by a letter, is typed by
+holding down the ``control'' key while the letter is typed. For example,
+``^A'' is a control-A. An escape sequence is entered by typing the
+``escape'' key followed by one or more characters.  The escape key is
+abbreviated as ``ESC.'' Note that unlike control keys, case matters in
+escape sequences; ``ESC\ F'' is not the same as ``ESC\ f''. Auto command
+completion is invoked by pressing the ``TAB'' key. If there is more than
+one possible completion, ``ESC\ ?'' will display the available
+alternatives.
+.PP
+An editing command may be typed anywhere on the line, not just at the
+beginning.
+In addition, a return may also be typed anywhere on the line, not just at
+the end.
+.PP
+Most editing commands may be given a repeat count,
+.IR n ,
+where
+.I n
+is a number.
+To enter a repeat count, type the escape key, the number, and then
+the command to execute.
+For example, ``ESC\ 4\ ^f'' moves forward four characters.
+If a command may be given a repeat count then the text ``[n]'' is given at the
+end of its description.
+.PP
+Please see the man page 
+.BR editline (3)
+for more details.
+The following are a list of the basic control characters and commands:
+.br
+.sp 1
+.RS
+.nf
+
+^A	Move to the beginning of the line
+^B	Move left (backwards) [n]
+^D	Delete character [n]
+^E	Move to end of line
+^F	Move right (forwards) [n]
+^G	Ring the bell
+^H	Delete character before cursor (backspace key) [n]
+^I	Complete filename (tab key); see below
+^J	Done with line (return key)
+^K	Kill to end of line (or column [n])
+^L	Redisplay line
+^M	Done with line (alternate return key)
+^N	Get next line from history [n]
+^P	Get previous line from history [n]
+^R	Search backward (forward if [n]) through history for text
+\&	must start line if text begins with an uparrow
+^T	Transpose characters
+^V	Insert next character, even if it is an edit command
+^W	Wipe to the mark
+^X^X	Exchange current location and mark
+^Y	Yank back last killed text
+^]c	Move forward to next character ``c''
+^?	Delete character before cursor (delete key) [n]
+ESC	start an escape sequence (escape key)
+TAB	auto command completion
+ESC ?	suggest alternative completions 
+
+Note: use the up/down arrow keys to recall previous commands.
+.fi
+.RE
+
+.SH HISTORY 
+.sp
+.TP 5
+.B Version 1.50 January 1997 -- fourth release of ATP
+.sp
+Full termcap support for non-ansi terminals. No limits on message size
+for any version. Replies can now be directed to any message area with
+`r' command. New `x' command for cross posting. Improved `r' and `c'
+commands for re-directing replies to different message areas.  Use ^C
+to cancel `find' search.  Add perl script `atpdiag' to help diagnose
+proper configuration.  Rot-13 message shroud/unshroud added. 
+GNU autoconf support provides configure
+script for building ATP on Unix systems.  Tom Glaab contributes tagline
+steal/add (thanks!). Tagline `tag on/off' commands added. MSDOS 16 bit
+version can swap itself out when spawning sub-shell if linked with Ralph
+Brown's spawno libraries. MSDOS versions now DESQview aware. 
+Stefan Reinauer contributes German language support. Code
+re-organized with greater modularity and strong type checking in mind.
+Source includes ansi2knr to allow building with non-ANSI C compiler.
+Can now be compiled with C++.  Various bug fixes and improvements.
+.TP 5
+.B Version 1.42 September 4, 1993 -- third release of ATP
+.sp
+This release sports improved `find' and `clean' commands. The `clean'
+command now allows selective purging of messages that have been marked
+killed with the `k' key. It also allows truncation of message bases to
+the last `n' messages. All in all a much nicer way to maintain message
+bases. Derric Scott (dtscott@access.digex.net) provided the patches for
+the improved `find' command which highlights found text in reverse
+video.  ATP supports messages up to 180,000 bytes in size (more than
+3000 lines). The ATP command line is now 8 bit clean and will accept the
+so called "high ascii" and foreign language characters.
+.sp
+PCBoard long subject lines are now supported but this is still
+experimental. Users may toggle this feature with the `pcb' command from
+the command line. The `blt' command displays a list of available
+bulletins, then type the bulletin name that you wish to view. Alan
+Barclay provided patches for SCO which also added the `qscan' command
+for a quick scan of abbreviated message headers.  Many bugs have been
+fixed and efforts to greater portability have continued. OS/2 is now
+supported.  Jim Gomes provided Windows and MSC support. It has been
+reported that ATP runs under the AMIGA but no patches were submitted for
+inclusion in this release. Thanks to David Fox for his bug reports and
+ideas.
+.TP
+.B Version 1.41 Spring 1993 -- beta testing release of ATP
+.sp
+Closed beta testing with interested individuals.
+.TP 5
+.B Version 1.4 November 1992 -- second release of ATP
+.sp
+Now ATP includes a separate conference for replies. Replies may be
+killed with the `k' command or security toggled with the `p' command.
+The `find' command and `next' command were added for text search. The
+Rich Salz and Simmule Turner line editing library is now included. This gives 
+powerful Emacs style command line editing and history recall. 
+Please check the separate copyright notice regarding this library.
+Three character sets are now supported: ISO Latin1, 7bit, and MSDOS. On
+terminals which support VT102 line graphics, MSDOS line graphics are 
+translated appropriately. In addition, for some terminals, special function
+keys are now supported. 
+.sp
+Limits on number of conferences per BBS is now set at 8192 with dynamic
+memory allocation for supporting data structures. Message size limit has been increased from
+32K bytes to 150K bytes, roughly 3000 lines of typical message text.
+Limits on the number of taglines have been removed. Taglines are now stored
+in a separate tagline file "taglines.atp". Taglines may now be selected
+randomly (automatically or manually) as well as directly. Bug fixes and
+general code cleanup also were done. Code has been brought into stricter
+compliance with ANSI and POSIX standards. Sorry K&R. No matter what your
+system GNU GCC is recommended for compiling ATP.
+.sp
+ATP has been compiled and tested on a number of systems for this release
+including Esix, Linux, SVR4, 386bsd, and MSDOS. For MSDOS it is recommended
+that DJ Delorie's port of GNU GCC be used. This is a very nice compiler and
+it will compile Unix source code very easily. It requires a 386 or better
+computer. ATP will also compile under the large model of Borland's Turbo
+C but the limits are smaller.
+.TP 5
+.B Version 1.3 July 1992 -- first release of ATP
+.sp
+McWilliams. Character set translation MSDOS/Linux, Linux/MSDOS. Personal
+mail alarm. Personal mail conference. Correct reply headers, correct
+time and conference numbers. Command line processing. Improved command
+parsing. Rewrite fget() to handle pathological control.dat files.
+Taglines and tagline management. Ansi editing of entries. Replies
+queries: save, abort, edit. Message header scanning. Bug fixes. Improved
+message quoting. Correction of conference Autojoin(); Tested under Linux
+0.96c and Esix R.4.0.
+.TP 5
+.B Version 1.2 April 1992 -- first Unix/Linux port of AzerTyuioP.
+.sp
+Salazar. Unix-izing for Linux. Conversion of path names. Writing new
+string comparison functions. Reworking system.c and system.h modules for
+portability.  First version to unarc packets and read them under Linux.
+Improved handling of control.dat parsing. Introduction of array to track
+real conference numbers versus conference ordinal numbers.
+.TP 5
+.B Version 1.1 November 1990 -- Cougnenc releases AzerTyuioP code.
+.sp
+Cougnenc. Code to experimental QWK reader AzerTyuioP is  released for
+MSDOS. Primarily useful as tool for studying QWK packets. Cougnenc had
+no documentation on the layout so this work was empirical in nature.
+Includes both French and English capabilities, set-able at compile time.
+Reader creates archives of received messages. 
+
+.SH THANKS
+Many thanks to Rene Cougnenc for his AzerTyuioP from which much
+of ATP is derived. Also thanks must be given to Mark Salazar who
+provided the first quasi-functional Unix version of AzerTyuioP
+which was able to un-archive packets and read mail. A big thanks
+to all who have provided patches particularly Derric Scott with
+enhancements to the `find' command. Alan Barclay provided fixes and
+added functionality with his SCO patches.  Tom Glaab has provided
+nice enhancements to the tagline functionality such as the `steal'
+command. Stefan Reinauer provided German language support. Also 
+thanks to Jim Gomes, Dane Beko, Patrick Lee, Ron
+Smith, and David Fox who have provided useful suggestions,
+contributions, and bug-reports.
+
+.SH COPYING AND NO WARRANTY
+Copyright \(co 1992,1993,1997 Thomas McWilliams.
+.br
+ATP is copyrighted free software provided WITHOUT warranty of any kind,
+NOT EVEN the implied warranty of merchantability or fitness for any
+particular purpose. Use at your own risk.  ATP may be used in any way
+you wish so long as you comply with the provisions of the Free Software
+Foundation GNU General Public License; either version 2 of the License,
+or (at your option) any later version. Essentially this means that you
+*MUST* provide the source code for any works derived from ATP when you
+distribute binaries. You can not withhold the rights which you yourself
+have been granted. Please type `show terms' from ATP's command line for
+a display of warranty disclaimer and pointers to pertinent documents.
+This software should have come with a copy of the GNU General Public
+License. You may obtain a copy of this license by writing to: 
+.nf
+
+\	Free Software Foundation, Inc.,
+\	675 Mass Ave,
+\	Cambridge, MA 02139, USA.
+
+.fi
+
+.SH BUG REPORTS AND PATCHES
+Bug reports, suggestions, and code contributions are welcome.  If you
+have ported ATP to another system, your are welcome to submit the
+patches so that they might be incorporated into the next release.
+Bug reports should include a way for me to reproduce the bug.
+.PP
+Fido netmail may be sent to me at node
+.TT 1:109/615 
+and I am sometimes reachable via the Internet at one of the following
+locations:
+.sp
+.TT \	tgm@netcom.com
+.sp
+.TT \	thomas.mcwilliams@f615.n109.z1.fidonet.org
+.sp
+Snail mail may be sent to:
+.nf
+
+\	Thomas McWilliams
+\	P.O. Box 7545
+\	Arlington, VA 22207
+
+Source code for ATP can be found at: 
+.TT sunsite.unc.edu:/pub/Linux/system/BBS/mail/atp-1.50-src.tar.gz
+.fi
+
+.SH FILES
+.I /usr/local/bin/atp
+.br
+.I $ATP/taglines.atp
+.br
+.I $ATP/atprc
+
+.SH SEE ALSO
+.RS
+.BR atpdiag (1),
+.BR editline (3),
+.BR zip (1),
+.BR unzip (1),
+.BR rot13 (1)
+.RE

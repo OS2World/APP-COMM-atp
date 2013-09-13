@@ -1,0 +1,380 @@
+@echo off
+perl -x %0.bat
+goto myexit
+#!perl
+extproc perl -x
+eval 'exec @PERLPATH@ -S $0 ${1+"$@"}'
+    if 0 ;
+#! @PERLPATH@
+# (this is a perl script: it requires a perl interpreter)
+# atpdiag -- diagnostic 'lint' for atprc (the atp configuration file).
+$diagversion = "0.92" ;
+
+# set up associative array of critical atprc values
+
+%rcvals = (
+'mail', '',
+'reply', '',
+'workpath', '',
+'editor', '',
+'archiver', '',
+'unarchiver', '',
+'speller', '',
+) ;
+
+%rcflag = (
+'mail', '',
+'reply', '',
+'workpath', '',
+'editor', '',
+'archiver', '',
+'unarchiver', '',
+'speller', '',
+) ;
+
+%rcbool = (
+'ansi', 'on ',
+'autotag','on ',
+'bell','off ',		# silent:read.c
+'color','on ',		# color:read.c
+'graphics','on ',
+'header','on ',
+'pcb','on ',		# pcbext:read.c
+) ;
+
+# get options 
+
+$opt_v =  '' ;
+$opt_h == '' ;
+
+foreach $i (0 .. $#ARGV) 
+{
+	$goodopt = '';
+	$curopt = $ARGV[$i] ;
+	$curopt =~ /^-{1,2}[vV]e*/ && ( $opt_v = 't' ) && ( $goodopt = 't' );
+	$curopt =~ /^-{1,2}[hH]e*/ && ( $opt_h = 't' ) && ( $goodopt = 't' );
+	if ( ! $goodopt ) 
+	{ 
+	  printf "unrecognized option: %s\n", $ARGV[$i] ; 
+	  exit 1 ;
+	} ;
+}
+
+if ( $opt_v && ! $opt_h ) { printf "%s\n", $diagversion ; exit 0 ; }  ;
+
+# print banner
+print "\n\n\n" ; 
+print  "    +---------------------------------------------+\n";
+printf "    |  ATP QWK Mail/News Reader Diagnostics %s  |\n", $diagversion ;
+print  "    +---------------------------------------------+\n\n";
+
+if ( $opt_h ) { print "    Usage:  atpdiag [ -h | -v ] \n\n" ; exit 0 ; } ;
+
+# get PATH from environment
+$paths = $ENV{ 'PATH' } ;
+$paths =~ tr%A-Z\\%a-z/% ; # @NOTUX@
+@pdirs = reverse split( /;/, $paths ) ; # @NOTUX@
+@pdirs = reverse split( /:/, $paths ) ; # @UNIX@
+
+# get ATP home directory 
+$atpath = $ENV{ 'ATP' } ;
+if ( ! $atpath ) 
+{ 
+     print  "  - WARNING: you have not set and/or exported the ATP environment variable!\n" ;
+     $atpath = $ENV{ 'HOME' } ;
+     printf "  - INFO   : looking in your 'HOME' %s directory for atprc\n", $atpath ;
+}
+
+# make sure atpath ends in '/' but not '//'
+$atpath =~ s/\/+\s*$//  ;
+$atpath =~ s/$/\//  ;
+
+# check existance of atprc initialization file
+if ( -e  $atpath.".atprc" )
+  { $rcpath = $atpath.".atprc" }
+elsif ( -e $atpath."atprc" )
+  { $rcpath = $atpath."atprc" }
+else
+  { 
+  printf "  - ERROR  : Can't find atprc or .atprc on path %s \n", $atpath ; 
+  printf "    please verify and try again!\n\n" ;
+  exit 1 ;
+  }
+
+# find where atp executable is
+  $found = $canrun = '' ;
+  foreach $dir ( @pdirs )
+  { 
+    if ( -e $dir."/atp" )
+    {
+      $found = $dir."/atp" ;
+      if ( -x  $found ) 
+      { $canrun = 't' ; } 
+      else 
+      { $canrun = ''  ; } ;
+    } 
+  }
+
+# display informational messages
+$atpath =~ tr%A-Z\\%a-z/% ; # @NOTUX@
+$rcpath =~ tr%A-Z\\%a-z/% ; # @NOTUX@
+$found  =~ tr%A-Z\\%a-z/% ; # @NOTUX@
+printf "  - INFO   : ATP home base is: %s\n", $atpath ;
+printf "  - INFO   : ATP atprc file is: %s\n", $rcpath ;
+if ( $found )
+{
+  printf "  - INFO   : ATP atp exec file is: %s\n", $found ;
+  if ( ! $canrun )
+  {
+    printf "\n  - WARNING: no execute permission for %s \n", $found ; 
+  }
+  else
+  {
+    print "\n" ;
+  }
+}
+else
+{
+  print "\n" ;
+}
+
+# check existance and readability of taglines.atp
+if ( -e $atpath."taglines.atp" )
+ {
+  if ( ! open( TAGLINES, $atpath."taglines.atp" ) ) {
+  printf "  - WARNING: can't open file %s \n", $atpath."taglines.atp" ;
+  printf "    please verify and check permissions.\n" ; }
+  else { close TAGLINES } ;
+ }
+else
+ {
+  printf "  - WARNING: can't find file 'taglines.atp' in %s\n", $atpath ;
+ }
+
+# try to open atprc
+if ( ! open( ATPRC, $rcpath )) 
+{
+printf "%3d ERROR  : can't open your atprc %s\n", $atrcln, $rcpath ;
+printf "    Please verify, check permissions, and try again.\n" ;
+exit 1 ;
+}
+
+# Read and parse each line of atprc with emphasis on paths and executables
+$atprcln = 0 ;
+while (<ATPRC>) 
+{
+  $atprcln = $atprcln + 1 ;
+  chop;
+#  #s/^\s+//; # strip leading white space 
+#  s/\s+#+.*$//; # strip trailing comments and white space
+
+# check for proper alignment
+  if ( /^#|^\s*$/ ) 
+  {
+     goto endo ;
+  }
+  elsif ( /^\s+#/ )
+  {
+     printf "\%3d ERROR  : comments must be left justified\n", $atprcln ;
+     goto endo ;
+  } 
+  elsif ( /^\s+\S*/ )
+  {
+     printf "%3d ERROR  : entries must be left justified\n", $atprcln ;
+  }
+
+# if needed correct alignment errors
+   s/^\s+//; # strip leading white space 
+   # [future use]  s/\s+#+.*$//; # strip trailing comments and white space
+
+# check critical ATP paths
+  if ( /^(mail|reply|workpath)\s+/ ) # paths 
+  {
+     $pathtype = $1 ;
+     /$pathtype\s+=\s+(\S+)\s*(.*)/ ;
+     $pathway = $1 ; $pathjunk = $2 ; 
+     if ( ! $pathway ) { goto endo ; }
+     else { $rcvals{ $pathtype } = 't'; }
+     if ( $pathjunk )
+     {
+     	printf ("%3d WARNING: junk follows %s path definition %s:   %s\n", 
+	        $atprcln, $pathtype, $pathway, $pathjunk ) ;
+     }
+     if ( ! -e $pathway )  
+     { 
+     	printf ("%3d WARNING: %s path doesn't exist: %s\n", $atprcln, $pathtype, $pathway ) ;
+	goto endo ;
+     }
+     if ( ! -d _ )
+     {
+     	printf "%3d WARNING: %s path: %s is not a directory.\n", $atprcln, $pathtype, $pathway ; 
+	goto endo ;
+     }
+     if ( ! -r _ )
+     {
+     	printf "%3d WARNING: %s path: %s is not readable.\n", $atprcln, $pathtype, $pathway ; 
+     }
+     if ( ! -w $pathway )
+     {
+     	printf "%3d WARNING: %s path: %s is not writable.\n", $atprcln, $pathtype, $pathway ; 
+     }
+     if ( ! -x $pathway )
+     {
+     	printf "%3d WARNING: can't change to %s directory: %s\n", $atprcln, $pathtype, $pathway ; 
+     }
+    
+  }
+# check PATH for critical executables needed by ATP: 
+  elsif ( /^(editor|unarchiver|archiver|speller)\s+/ ) # bins 
+  { 
+       $cmdtype = $1 ;
+       /$cmdtype\s+=\s+(\S+)\s*(.*)/ ;
+       $cmdexec = $1 ; $cmdflag = $2 ;
+       # debug code
+       #printf "\t%s | %s | %s \n", $cmdtype, $cmdexec, $cmdflag ;
+       if ( ! $cmdexec ) { goto endo ; } 
+       if ( $rcvals{ $cmdtype } )
+         { printf "%3d WARNING: atprc variable \'%s\' redefined\n", $atprcln, $cmdtype }
+       $rcvals{ $cmdtype } = $cmdexec ; 
+       $rcflag{ $cmdtype } = $cmdflag ; 
+       $found = '' ; $canrun = '' ;
+
+# check if command is absolute path
+if ( grep( /^\//, $cmdexec )) {           # @UNIX@ 
+if ( grep( /^[A-Ma-m]:\\/, $cmdexec )) {  # @NOTUX@
+  @srchpath = ("") ;
+  $sep = "" ; 
+} else {
+  @srchpath = @pdirs ;
+  $sep = "/" ;
+} ;
+
+@sfxlst = ("") ;
+if(!grep(/\.(cmd|exe)$/i,$cmdexec)){@sfxlst=("\.exe","\.cmd");}; # @OS2@ @NOTUX@
+if(!grep(/\.(com|exe|bat)$/i, $cmdexec)){@sfxlst=("\.com","\.exe","\.bat");}; # @DOS@ @NOTUX@
+foreach $dir ( @srchpath ) {
+foreach $sfx ( @sfxlst   ) { 
+  $tstmp = $dir.$sep.$cmdexec.$sfx ;                            
+     if ( -e $tstmp )
+     {
+        $found = $tstmp ;
+        if ( -x $found ) 
+	  { $canrun = "t" } else { $canrun = '' ; } ;
+     } 
+   } 
+ }
+      if ( ! $found )
+        {
+	printf "%3d WARNING: can't find %s %s in your exec PATH\n", $atprcln, $cmdtype, $cmdexec ; 
+	$rcvals{ $cmdtype } = "ERROR: line ".$atprcln ;
+	}
+      elsif ( ! $canrun )
+        {
+	printf "%3d WARNING: no execute permission for %s %s\n", $atprcln, $cmdtype, $found ; 
+	}
+    }
+
+# check for configuration options which take numeric arguments
+    elsif ( /^(screencol|screenlen|truncate)\s+=\s+(\d+|\S*)\s*(\S*)/ ) # numerical
+    {
+       if ( $3 ) 
+       { printf "%3d WARNING: junk follows %s numeric definition: %s\n", 
+         $atprcln, $1, $3 ; }    ;
+       if ( ! grep( /^\d+$/, $2 ) || $2 < 0 ) 
+       { printf "%3d WARNING: bad numeric argument for %s: %s\n",
+         $atprcln, $1, $2 ;
+       } ;
+    }
+
+# check for options which take string arguments 
+    elsif ( /^(blist|charset|qlist|tagline|tagstyle|user)/i ) #string
+    {
+     ;
+    }
+
+# check for options which take on/off boolean arguments
+    elsif ( /^(ansi|autotag|bell|color|graphics|header|pcb)\s+=/i ) # boolean
+    {
+       $booltype = $1 ;
+       $boolflag = $rcbool{ $1 } ;
+     if ( /$booltype\s+=\s+(on|off|\S+)\s*(\S*)/ ) 
+     {
+        # check for trailing junk 
+        if ( $2 ) 
+        { 
+         printf "%3d WARNING: junk follows %s boolean (on|off) definition: %s\n", 
+         $atprcln, $booltype, $2 ; 
+        }
+
+        # check for non-boolean argument
+        if ( ($1 ne "on") && ($1 ne "off") ) 
+        { 
+	 printf "%3d WARNING: bad boolean (on|off) argument for %s: %s\n",
+         $atprcln, $booltype, $1 ;
+        } ;
+
+	# check if variable was previously defined 
+	if((! grep(/o(n|ff) /, $boolflag))) 
+	{
+         printf "%3d WARNING: atprc boolean variable \'%s\' redefined\n", 
+	 $atprcln, $booltype ;
+	}
+	$rcbool{ $booltype } = $1 ;
+     }
+     else 
+     { 
+      printf "%3d WARNING: atprc variable \'%s\' NOT initialized\n",
+      $atprcln, $booltype ; 
+     } ;
+    }
+    else
+    {
+       printf "%3d WARNING: unrecognized entry\n", $atprcln ;
+    }
+endo:
+}
+close ATPRC ;
+
+# list important atprc variables which were not assigned during parse.
+foreach $val ( 'mail','reply','workpath','editor', 
+               'archiver','unarchiver','speller' ) 
+{ 
+  if ( ! $rcvals{ $val } ) 
+  { 
+    printf "  - WARNING: atprc variable \'%s\' NOT initialized\n", $val ; 
+  }
+} 
+
+# check if unarchiver is UnZip 5.11 or later and should use -L switch
+$unarch = $rcvals{ "unarchiver" } ;
+$unflag = $rcflag{ "unarchiver" } ;
+$unzenv = $ENV{ UNZIP } ;
+
+if ( grep( /unzip/ , $unarch ))
+{
+$unzversion = "" ;
+$lswitch = "" ;
+
+$_ = `$unarch 9-_df-_e.zip 2>&1` ; # hopefully this is a unique file name :-)
+s/\n/ /g ;
+if ( /pkunzip/i ) { printf "\n" ; exit 0 ; } ;
+$_ = `$unarch -h 2>&1` ; # 
+s/\n/ /g ;
+/UnZip\s+(\d+\.\d+)\s/ && ( $unzversion = $1 ) ;
+/\s-(L)\s.*[lL]ower/   && ( $lswitch = "L" ) ;
+
+  if (    (  $lswitch eq "L" ) 
+       &&(( ! grep( /-.*L/ , $unzenv )) 
+       && ( ! grep( /-.*L/ , $unflag )) ) 
+     )
+  {
+    printf "  - WARNING: UnZip %s -- you must add -L switch to %s flags in\n", $unzversion, $unarch ;
+    printf "    atprc or add -L switch to flags in UNZIP environment variable\n" ;
+    if( ! $unzenv ) 
+    { print "    which currently is either not set or not exported.\n" ; } ;
+  }
+}
+
+# end of file
+__END__
+:myexit

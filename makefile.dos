@@ -1,0 +1,202 @@
+# --------------------------------------------------------------------------
+# Microsoft C and QuickC Makefile for MS-DOS version of ATP March 28, 1996
+# tested with Microsoft NMAKE version 1.00 and MS Quick C 2.01, and also
+# tested with DMAKE 4.0, freeware ftp-able from plg.uwaterloo.ca:/pub/dmake
+# NOTE: Unix, D.J.Delore GCC, and Borland must use *other* makefiles!!!
+#
+# Read all this stuff first running make!
+#
+# -------------------------------------------------------------------------
+# This makefile has been used and tested with NMAKE 1.00, MS Quick C
+# 2.01, and also with DMAKE 4.0. It should also work with the standard
+# Microsoft C compiler. A couple of cautionary warnings may be generated
+# but these are harmless.
+#
+# This version of ATP is identical to the Unix version except for
+# somewhat smaller limits because of MS_DOS memory segmentation
+# considerations. In practice this should not be much of a problem since
+# even the reduced limits are about an order of magnitude more generous
+# than most QWK readers for MS-DOS.
+#
+# Stack size should be set to at least 4K or more, and this makefile
+# assigns it at 6K under 16 bit DOS. If your compiler supports a 32
+# bit DOS extender, delete /D_ATP16_ from the CDEFS below. This will
+# enable larger data objects, and avoid the limits imposed by 16 bit
+# compilers. When using 16 bit compilers, it is suggested that the large
+# memory model be used for compilation, and that is how the makefile is
+# configured.
+#
+# Make sure that you have a generous number of files and buffers set in
+# your CONFIG.SYS before compiling. About 20 for each is a fine choice.
+# Remember that it is nicer to have ANSI.SYS installed when using ATP
+# under MSDOS.
+# -------------------------------------------------------------------------
+BSHELL	= command.com /c
+CC	= qcl
+LD	= link
+AR	= lib
+RM	= $(BSHELL) RMV.BAT
+CD	= $(BSHELL) CDIR.BAT
+MV	= $(BSHELL) ren
+CP	= $(BSHELL) copy
+#MAKE	= pdmake
+MK_FILE	= makefile.dos
+MK_CMD	= $(MAKE) -f $(MK_FILE)
+FORCEMAKE = FO.RCE
+
+# -------------------------------------------------------------------------
+# Here are the flags to enable or suppress warning messges
+#
+WARN	= /W3
+
+# -------------------------------------------------------------------------
+# Attention les francophones!
+# Si vous voulez, effacez -DENGLISH dessous et substituez -DFRENCH 
+LANG	= -DENGLISH
+#LANG	= -DFRENCH
+#LANG	= -DGERMAN
+
+#---------------------------------------------------------------------------
+# compiler and linker flags
+#
+# uncomment SPAWNO and SPAWNL if you have installed Ralph Brown's SPAWNO libs
+#SPAWNO	= /DSPAWNO
+#SPAWNL	= spawnl.lib
+#DEBUG	= /Zr /Od
+OFLAGS	= /Ox /Gs
+CDEFS	= $(LANG) $(SPAWNO) /D_MSC_ /D__MSDOS__ /D_ATP16_ /DDESQVP
+CFLAGS	= /AL /Za $(CDEFS) $(OFLAGS) $(DEBUG) $(WARN)
+LDOPT	= /F /PACKC /CP:19000 /EXEP 
+LDFLAG	= /BA /LI /NOI /ST:6144 $(LDOPT)
+LIBS	= $(SPAWNL) atp.lib editline\libedit.lib
+
+# -------------------------------------------------------------------------
+# lint configuration
+LINT	= tlint
+LINTFG	= $(LANG) $(SPAWNO) -D__LINT__ -D__MSDOS__ -D_MSC_ -D_QC
+LINTLB	= -l./editline/libedit.ln
+
+# -------------------------------------------------------------------------
+
+SR1	= read.c readlib.c makemail.c system.c ansi.c qlib.c text.c reply.c
+SR2	= chosetag.c atpmain.c rdconfig.c purge.c display.c mkindex.c
+
+OB1	= read.obj readlib.obj makemail.obj system.obj ansi.obj qlib.obj text.obj reply.obj
+OB2	= chosetag.obj atpmain.obj rdconfig.obj purge.obj display.obj mkindex.obj
+
+SRC	= $(SR1) $(SR2)
+OBJ	= $(OB1) $(OB2)
+
+# remove the next line if your version of make chokes on the swap directive:
+.SWAP :
+
+.SUFFIXES :
+.SUFFIXES : .obj .c
+.PHONY : clean eline utility $(FORCEMAKE)
+
+.c.obj:
+	$(CC) $(CFLAGS) -c $<
+
+all : atp.exe utility
+
+atp.exe : eline atp.lib
+	$(LD) $(LDFLAG) atpmain,ATP,ATP,$(LIBS);
+
+atp.lib : batch $(OBJ)
+	@$(RM) atp.lib
+	lib atp +rdconfig +read +qlib +makemail +readlib +text +display ;
+	lib atp +ansi +mkindex +purge +system +reply +chosetag ;
+
+#---------------------------------------------------------------------------
+# utility builds the atp support and diagnostic programs
+
+utility : knowname $(FORCEMAKE)
+	@$(CD) utils $(MK_CMD) all
+
+# --------------------------------------------------------------------------
+# eline builds libedit.lib used for command-line editing and history recall.
+
+eline : knowname $(FORCEMAKE)
+	@$(CD) editline $(MK_CMD) libedit.lib
+
+# -------------------------------------------------------------------------
+# lint and doc targets
+
+lint :	elint
+	$(LINT) $(LINTFG) $(LINTLB) $(SRC) >$(@)
+
+elint : knowname 
+	@$(CD) editline $(MK_CMD) libedit.ln
+	
+atp.doc :
+	groff -man docs\atp.1 | sed -e "s/.//g" >$(@)
+
+manifest : $(FORCEMAKE)
+	ls -lR > Manifest	
+
+# -------------------------------------------------------------------------
+# cleaning and housekeeping targets
+
+clean : rmv.bat $(FORCEMAKE)
+	@$(RM) atp.exe atp.lib $(FORCEMAKE) *.obj *.map *.lst
+	
+mclean : knowname clean 
+	@$(RM) atplint
+	@$(CD) editline $(MK_CMD) $(@)
+	@$(CD) utils    $(MK_CMD) $(@)
+
+clobber : knowname clean 
+	@$(RM) link.atp ansi2knr.exe rot13.exe atpdiag.bat link.atp atplint
+	@$(RM) *.a *.o *.bak *.cof *.lib *.lst
+	@$(CD) editline $(MK_CMD) $(@)
+	@$(CD) utils    $(MK_CMD) $(@)
+	@$(RM) tstmymak.bat cdir.bat
+	@$(BSHELL) del rmv.bat
+
+mostlyclean : mclean 
+
+# -------------------------------------------------------------------------
+# support targets and batch files used by make
+
+# does our version of MAKE know it's own name? 
+knowname : batch $(FORCEMAKE)
+	@$(BSHELL) tstmymak.bat $(MK_FILE) $(MAKE) 
+
+batch : tstmymak.bat cdir.bat rmv.bat
+
+tstmymak.bat : .\utils\batch\tstmymak.in
+	$(CP) utils\batch\tstmymak.in $(@) 
+
+rmv.bat : utils\batch\rmv.in
+	$(CP) utils\batch\rmv.in $(@) 
+
+cdir.bat : utils\batch\cdir.in
+	$(CP) utils\batch\cdir.in $(@) 
+
+# phony rule is used to FORCE unconditional build of targets 
+$(FORCEMAKE) :
+	@$(BSHELL) rem
+
+memchk: knowname $(FORCEMAKE)
+	@$(CD) editline $(MK_CMD) $(@)
+	
+# -------------------------------------------------------------------------
+# object file depenencies
+#
+atpmain.obj : atpmain.c system.h atptypes.h globals.h reader.h readlib.h makemail.h qlib.h ansi.h
+read.obj : read.c system.h atptypes.h globals.h reader.h readlib.h makemail.h qlib.h ansi.h
+readlib.obj : readlib.c system.h atptypes.h globals.h reader.h readlib.h ansi.h 
+makemail.obj : makemail.c system.h atptypes.h globals.h reader.h readlib.h 
+system.obj : system.c system.h atptypes.h globals.h reader.h readlib.h ansi.h qlib.h
+ansi.obj : ansi.c system.h atptypes.h globals.h reader.h readlib.h ansi.h
+qlib.obj : qlib.c system.h atptypes.h globals.h reader.h readlib.h ansi.h qlib.h  makemail.h
+mkindex.obj : mkindex.c system.h atptypes.h globals.h reader.h readlib.h ansi.h 
+text.obj : text.c system.h atptypes.h globals.h reader.h readlib.h ansi.h
+chosetag.obj : chosetag.c system.h atptypes.h globals.h reader.h readlib.h qlib.h  ansi.h makemail.h
+purge.obj : purge.c system.h atptypes.h globals.h reader.h readlib.h qlib.h ansi.h makemail.h
+display.obj : display.c system.h atptypes.h globals.h reader.h readlib.h makemail.h qlib.h ansi.h
+reply.obj : reply.c system.h atptypes.h globals.h reader.h readlib.h ansi.h makemail.h qlib.h
+rdconfig.obj : rdconfig.c system.h atptypes.h globals.h reader.h readlib.h makemail.h qlib.h ansi.h
+#
+# end of makefile ---------------------------------------------------------
+

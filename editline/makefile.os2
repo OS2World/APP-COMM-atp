@@ -1,0 +1,147 @@
+##
+##  EMX/OS2 makefile for editline library.
+##  Tested with DMAKE 4.00 and GNU MAKE 3.75 
+##
+##  NOTE: Options and definitions have been pre-set for EMX in the 
+##        file editline.h. The following descriptions are only for 
+##        informational purposes.
+##
+##  Set your options:
+##	-DANSI_ARROWS		ANSI arrows keys work like emacs.
+##	-DHIST_SIZE=n		History size.
+##	-DUNIQUE_HISTORY	Don't save command if same as last one.
+##
+##  Set your definitions:
+##	-DHAVE_TCGETATTR	Have tcgetattr(), tcsetattr(). [unix only]
+##	-DHAVE_STRDUP		Have strdup().
+##	-DHAVE_PERROR		Have perror() (used in testit)
+##	-DHAVE_DIRENT_H		Use <dirent.h>, not <sys/dir.h>
+##	-DHAVE_UNISTD_H 	Have <unistd.h>	
+##	-DHAVE_TERMCAP_H	Have <termcap.h>
+##	-DHAVE_LIBTERMCAP	Use the termcap library for terminal size,
+##				add -ltermcap to LIBS, below if you set this.
+
+#WARN	= -Wall -Wpointer-arith -Wcast-qual -Wwrite-strings \
+#	-Wunused -Wcomment -Wswitch
+
+#topdir = ..
+#srcdir = .
+#VPATH = .
+
+CC = gcc
+BSHELL = cmd.exe /c
+RM = -$(BSHELL) 2>nul del /n
+
+INSTALL =
+INSTALL_PROGRAM =
+INSTALL_DATA =
+
+#DBFLG = -DMEMDEBUG
+#DBLIB = -lmemdb
+DEFS = -Dunix=1
+LIBS = -ltermcap $(DBLIB)
+OPTS = $(DEFS) -DHIST_SIZE=25 -DUNIQUE_HISTORY -DANSI_ARROWS
+OFLG = -O2 -m486 -fno-strength-reduce -fomit-frame-pointer
+
+CFLAGS = $(OFLG) -I.. $(OPTS) $(WARN) $(DBFLG)
+LDFLAGS = 
+RANLIB	= ls -l
+
+prefix = /usr/local
+exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
+libdir = $(prefix)/lib
+incdir = $(prefix)/include
+mandir = $(prefix)/man/man1
+
+#SHELL = /bin/sh
+SHELL = c:/os2/cmd.exe
+
+SRCS = editline.c complete.c sysdos.c 
+OBJS = editline.o complete.o sysdos.o 
+HDRS = editline.h edlproto.h msdos.h os9.h unix.h edpublic.h
+
+LINT  =
+
+DISTFILES =
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+	
+all: libedit.a testit.exe
+
+testit.exe : libedit.a testit.o
+	$(CC) $(LDFLAGS) -o testit.exe testit.o libedit.a $(LIBS) $(DBLIB)
+
+libedit.a: $(OBJS) 
+	$(RM) $@
+	ar r $@ $(OBJS)
+	$(RANLIB) $@
+
+testit.o : testit.c
+
+install:
+	$(INSTALL_DATA) libedit.a  $(libdir)
+	$(INSTALL_DATA) editline.h $(incdir)
+	$(INSTALL_DATA) editline.1 $(mandir)
+
+uninstall:
+	$(RM) $(libdir)/libedit.a  
+	$(RM) $(incdir)/editline.h 
+	$(RM) $(mandir)/editline.1 
+
+clean: .FORCE
+	$(RM) *.o *.a *.obj testit core lint lint.all a.out erro clean
+
+mostlyclean: clean
+	$(RM) tags refs
+
+distclean: mostlyclean
+	$(RM) config.log config.cache config.scan configure.scan
+	$(RM) config.status deps lint.all
+
+spotless: mostlyclean
+	$(RM) *.obj *.lib
+	$(RM) config.log config.cache config.scan configure.scan
+	$(RM) config.status deps lint.all
+
+clobber: distclean 
+	$(RM) *.obj *.lib
+
+tags:
+	ctags -rstv *.[ch]
+
+convert: ../ansi2knr
+	for F in $(SRCS) ; do ../ansi2knr $$F ansi.tmp ;\
+	mv $$F $$F~ ; mv ansi.tmp $$F ; done
+	for F in $(HDRS) ; do sed -e '/^[^#]/ s/(.*)/()/' $$F >ansi.tmp;\
+	mv $$F $$F~ ; mv ansi.tmp $$F ; done
+	touch convert
+
+unconvert:
+	for F in *.c~ ; do mv $$F `basename $$F c~`c ; done
+	for F in *.h~ ; do mv $$F `basename $$F h~`h ; done
+	$(RM) convert
+
+dep:	
+	$(CC) -MM $(CFLAGS) $(SRCS) testit.c
+
+lint:   
+	$(LINT) -I.. $(OPTS) $(SRCS) >lint.all
+
+.FORCE:
+	@ $(BSHELL) rem
+
+depend:
+	gcc -MM -I./editline $(CFLAGS) $(SRCS) >depends
+
+# dependencies
+editline.o: editline.c editline.h msdos.h edlproto.h ../atptypes.h \
+ edpublic.h ../reader.h ../globals.h ../system.h ../readlib.h
+complete.o: complete.c editline.h msdos.h edlproto.h ../atptypes.h \
+ edpublic.h
+sysdos.o: sysdos.c editline.h msdos.h 
+testit.o: testit.c editline.h msdos.h edlproto.h ../atptypes.h
+sysos9.o : sysos9.c editline.h 
+sysunix.o : sysunix.c editline.h unix.h 
+# end of Makefile

@@ -1,0 +1,83 @@
+.\" this file uses GNU groff tmac.an macros
+.\"
+.TH ATPDIAG 1 "28 November 1995" "ATPDIAG 0.92" "ATP QWK Mail/News Reader"
+
+.SH NAME
+atpdiag \- checks atp qwk reader configuration.
+
+.SH SYNOPSIS
+.B 
+atpdiag
+.RB " [ " -h " | " -v " | " --help " | " --version  " ] " 
+
+.SH DESCRIPTION
+A diagnostic script written in 
+.BR Perl , 
+useful during installation of ATP QWK news/mail reader, and for
+diagnosing possible configuration problems.  When started,
+.B atpdiag 
+looks for the environment variable
+.ft CW
+ATP\c
+.ft R
+\&\.
+then searches for the configuration file 
+.IR atprc .
+If that file can be successfully opened, 
+.B atpdiag
+parses it, checking specified paths and support programs for existence
+and accessibility. Informational, warning, and error messages are
+displayed. 
+
+.PP
+Perhaps the most common ATP installation error is the failure to 
+.I set and export 
+the
+.ft CW
+ATP 
+.ft R
+environment variable.  Normally this should be done in the user's shell
+startup file such as the
+.I \ .profile 
+in the user's home directory.  ATP expects the environment variable 
+.ft CW 
+ATP 
+.ft R
+to point to the directory where ATP will keep its 
+.I atprc 
+configuration file, 
+.I taglines.atp 
+tagline file, and message bases. 
+
+.PP
+Another possible ATP configuration problem occurs when using Info-Zip
+UnZip 5.11 and later. These recent versions of UnZip require the -L flag
+when un-zipping certain qwk packets originating in the MSDOS world.
+Previous to UnZip 5.11, the default behavior for UnZip was to translate
+MSDOS file names to lower case on unzipping. Now you must request lower
+case translation explicitly by adding the -L flag to your unzip command
+in your
+.IR atprc .
+This may also be accomplished by setting and exporting the 
+.ft CW
+UNZIP
+.ft R
+environment variable.
+
+When run,
+.B atpdiag
+will attempt to detect your UnZip version and report if the configuration
+appears wrong. 
+
+.SH FILES
+.I /usr/local/bin/atpdiag
+.br
+.I $ATP/taglines.atp
+.br
+.I $ATP/atprc
+
+.SH
+SEE ALSO
+.BR atp (1),
+.BR perl (1), 
+.BR unzip (1)

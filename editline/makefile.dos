@@ -1,0 +1,93 @@
+# MSDOS Makefile for ATP editline library
+# 
+# For use with most versions of MAKE for MSDOS. However users of Borland
+# MAKE should delete or comment out the following three lines. 
+.SWAP :
+.SUFFIXES :
+.SUFFIXES : .obj .c
+
+# This makefile was tested with several versions of make for MSDOS:
+# nmake, pdmake, dmake, ndmake 4.3, and gymake. Borland make will work
+# if you follow the previous instructions. Note that ndmake 4.5 is not
+# recommended, use ndmake 4.3 instead. GNU make is not recommended for
+# use with this particular makefile. The compilers tested were Borland
+# Turbo C++ and Microsoft Quick C 2.01.
+
+# uncomment the following eight lines for Microsoft Quick C
+CC	= qcl
+AR	= lib
+ARFLAG	= /NOI
+LD	= link
+LDFLAG	= /BA /LI
+DEFS	= /D_MSC_ /D__MSDOS__ /DDESQVP
+OFLAGS	= /Ox /Gs /Za /AL 
+WARN	= /W3
+# uncomment the following eight lines for Borland Turbo C/C++
+#CC	= tcc
+#AR	= tlib
+#ARFLAG	= /c
+#LD	= tlink
+#LDFLAG = /c /d
+#DEFS	= -DDESQVP
+#OFLAGS	= -O -G -a -d -k- -f- -ml 
+#WARN	= -w
+
+
+CFLAGS	= -I.. $(WARN) $(CPLUS_) $(OFLAGS) $(DEFS)
+SRC	= editline.c complete.c sysdos.c
+OBJ	= editline.obj complete.obj sysdos.obj
+BSHELL	= command /c
+RM	= $(BSHELL) ..\RMV.BAT
+CP	= $(BSHELL) copy
+MV	= $(BSHELL) ren
+LINT	= tlint
+LINTFG	= $(DEFS)
+FORCEMAKE = FO.RCE
+
+.c.obj:
+	$(CC) $(CFLAGS) -c $<
+
+all : libedit.lib testit.exe
+
+libedit.lib : $(OBJ)
+	$(RM) libedit.lib
+	$(AR) libedit.lib $(ARFLAG) +editline +complete +sysdos , libedit.map
+
+testit.exe : testit.obj libedit.lib 
+	$(LD) $(LDFLAG) testit.obj,testit,testit,libedit.lib
+
+..\rmv.bat : ..\utils\batch\rmv.in
+	$(CP) ..\utils\batch\rmv.in ..\rmv.bat
+
+clean : ..\rmv.bat $(FORCEMAKE)
+	@$(RM) *.obj *.lib core testit.exe
+
+mclean : clean
+	@$(RM) edlint *.ln *.map 
+
+clobber : clean
+	@$(RM) *.a *.o *.ln *.lst *.map makefile.trb
+
+mostlyclean : mclean
+
+# lint rules
+lint : $(FORCEMAKE)
+	$(LINT) -T -I.. -oedlint $(LINTFG) editline.c complete.c sysdos.c 
+
+libedit.ln : edlproto.h
+	$(LINT) $(LINTFG) -D__LINTLIB__ edlproto.h -L libedit.ln
+
+# phony rule is empty and is used to$(FORCEMAKE) unconditional build of targets 
+$(FORCEMAKE) : 
+	@$(BSHELL) rem
+
+memchk: $(FORCEMAKE)
+	chkdsk c:
+
+editline.obj : editline.c editline.h msdos.h edlproto.h ../atptypes.h \
+ edpublic.h ../reader.h ../globals.h ../system.h ../readlib.h
+complete.obj : complete.c editline.h msdos.h edlproto.h edpublic.h ../atptypes.h
+sysdos.obj : sysdos.c editline.h msdos.h
+testit.obj : testit.c editline.h msdos.h edlproto.h ../atptypes.h
+#
+# end of Makefile

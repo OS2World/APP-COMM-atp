@@ -1,0 +1,14 @@
+
+Source code for ATP 1.50 QWK reader.
+------------------------------------
+
+Extract the source code using any "tar" utility:
+
+       tar xvf atp150sr.tar
+
+The source code will be extracted to the subdirectory "atp-1.50".
+
+The source code is covered by the GNU license. See the file
+"COPYING" for terms and conditions.
+
+

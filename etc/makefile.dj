@@ -1,0 +1,211 @@
+#
+# Makefile for DJGPP version of ATP requires GNU Make utility
+# -------------------------------------------------------------------------
+#
+#WARN = -Wall -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion \
+#       -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wformat \
+#       -Wpointer-arith -Wunused -Wcomment -Wswitch
+
+ 
+srcdir	 = .
+VPATH	 = .
+
+#CC = gcc -x c++
+CC = gcc
+
+#SHELL = /bin/sh
+
+INSTALL = 
+INSTALL_PROGRAM = 
+INSTALL_DATA = 
+
+LINT = 
+
+# Attention les francophones!
+# Si vous voulez, effacez -DENGLISH dessous et substituez -DFRENCH 
+LANG = -DENGLISH 
+#LANG = -DFRENCH
+#LANG = -DGERMAN
+
+DEFS = -Dunix=1 -DDJGPP
+LIBS = -lpc
+OPTS = $(LANG) $(DEFS)
+DBFLG = 
+DBLIB = 
+#OFLG = -g -O 
+OFLG = -O2 -m486 -fomit-frame-pointer -finline-functions -fno-strength-reduce
+
+
+CFLAGS =  $(OFLG) $(OPTS) $(WARN)
+LDFLAGS =  $(srcdir)/editline/libedit.a $(LIBS)
+
+STRIP = strip
+
+prefix = /usr/local
+exec_prefix = $(prefix)
+bin_prefix =
+man_prefix =
+
+bindir = $(exec_prefix)/bin
+libdir = $(exec_prefix)/lib
+incdir = $(exec_prefix)/include
+mandir = $(exec_prefix)/man/man1
+manext = 1
+
+HDRS = ansi.h atptypes.h globals.h makemail.h qlib.h reader.h readlib.h system.h
+
+OBJ1 =  ansi.o atpmain.o chosetag.o display.o
+OBJ2 =  makemail.o mkindex.o purge.o qlib.o rdconfig.o
+OBJ3 =  read.o readlib.o reply.o system.o text.o
+OBJS = $(OBJ1) $(OBJ2) $(OBJ3)
+
+SRC1 =  ansi.c atpmain.c chosetag.c display.c
+SRC2 =  makemail.c mkindex.c purge.c qlib.c rdconfig.c
+SRC3 =  read.c readlib.c reply.c system.c text.c
+SRCS = $(SRC1) $(SRC2) $(SRC3)
+
+%.exe : %.cof
+	$(STRIP) $<
+	coff2exe $<
+
+%.c~ : %.c
+	ansi2knr $< $<tm
+	$(MV) $< $@
+	$(MV) $<tm $<
+
+%.h~ : %.h
+	sed -e '/^[^#]/ s/(.*)/()/' $< > $<tm
+	$(MV) $< $@
+	$(MV) $<tm $<
+
+all:	atp.exe
+	$(MAKE) -C ./utils -f makefile.dj all
+
+atp.exe: atp.cof
+
+atp.cof:  $(OBJS) eline
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+	
+atpdbg: $(OBJS) eline
+	$(CC) -g -o $@ $(OBJS) $(DBLIB) editline/libedit.a
+	
+install:
+	@echo '   '
+	$(STRIP) $(srcdir)/atp
+	$(INSTALL) -m 755 $(srcdir)/atp  $(bindir)
+	$(INSTALL_DATA) $(srcdir)/docs/atp.1 $(mandir)
+	@echo '   '
+	@echo '   '
+	@echo '   The ATP executable and man pages are now installed.'
+	@echo '   Now you must chose a home directory for the ATP config-'
+	@echo '   uration files and message bases. Usually a subdirectory'
+	@echo '   of your home directory is a good choice. Copy the atprc'
+	@echo '   file and taglines.atp from the docs subdirectory to the'
+	@echo '   ATP home directory. Do not overwrite your old versions.'
+	@echo '   Edit your shell .profile to set the environment variable'
+	@echo '   ATP to point to the ATP home directory and do not forget'
+	@echo '   to export it. Edit and configure the atprc to suit your'
+	@echo '   taste. Read the atp man page for usage tips.'
+	@echo '   '
+	@echo '   '
+debug:
+	$(MAKE) atpdbg
+
+uninstall:
+	rm -f $(bindir)/atp  
+	rm -f $(mandir)/atp.1 
+
+callmap: 
+	calls -i $(CFLAGS) -f main $(SRCS) > callmap
+
+# editline library
+eline:
+	$(MAKE) -C ./editline -f makefile.dj libedit.a 
+
+elinedb:
+	$(MAKE) -C ./editline -f makefile.dj debug
+
+atp.doc: docs/atp.1
+	groff -man docs/atp.1 | sed -e "s/.//g" > docs/atp.doc
+
+edl.doc:
+	groff -man Docs/editline.3 | sed -e "s/.//g" > Docs/editline.doc
+	
+docs: atp.doc edl.doc
+
+clean:
+	rm -f *.o core
+
+mostlyclean: clean
+	rm -f tags refs atp erro atp.exe atp.coff
+	$(MAKE) -C ./editline -f makefile.dj clean
+
+distclean: mostlyclean
+	rm -f config.status depend
+	$(MAKE) -C ./editline -f makefile.dj distclean
+
+spotless: distclean
+	rm -f *.obj *.lib *.map
+	$(MAKE) -C ./editline -f makefile.dj spotless 
+
+clobber: spotless
+
+tags:
+	ctags -rstv *.[ch]
+
+manifest:
+	ls -l ./* > Manifest	
+
+convert: 
+	echo "convert" >convert
+
+unconvert: 
+	if exist complete.c~ del complete.c
+	if exist editline.c~ del editline.c
+	if exist sysdos.c~ del sysdos.c
+	if exist editline.h~ del editline.h
+	if exist edlproto.h~ del edlproto.h
+	if exist msdos.h~ del msdos.h
+	if exist unix.h~ del unix.h
+	rename *.c~ *.c
+	rename *.h~ *.h
+	$(RM) convert
+
+
+lint:
+	$(LINT) $(CFLAGS) -Dunix -Dlinux *.c >atplint	
+
+extract:
+	cextract -Dunix -Dlinux -DENGLISH $(SRCS) >test.h
+
+depend:
+	gcc -MM -I./editline $(CFLAGS) $(SRC1) >depend
+	gcc -MM -I./editline $(CFLAGS) $(SRC2) >>depend
+	gcc -MM -I./editline $(CFLAGS) $(SRC3) >>depend
+
+#
+ansi.o: ansi.c system.h atptypes.h globals.h reader.h readlib.h ansi.h
+atpmain.o: atpmain.c system.h atptypes.h globals.h reader.h readlib.h makemail.h \
+  qlib.h ansi.h
+chosetag.o: chosetag.c system.h atptypes.h globals.h reader.h readlib.h qlib.h \
+  ansi.h makemail.h
+display.o: display.c system.h atptypes.h globals.h reader.h readlib.h makemail.h \
+  qlib.h ansi.h
+makemail.o: makemail.c system.h atptypes.h globals.h reader.h readlib.h \
+  makemail.h qlib.h ansi.h
+mkindex.o: mkindex.c system.h atptypes.h globals.h reader.h readlib.h ansi.h \
+  qlib.h makemail.h
+purge.o: purge.c system.h atptypes.h globals.h reader.h readlib.h qlib.h ansi.h \
+  makemail.h
+qlib.o: qlib.c system.h atptypes.h globals.h reader.h readlib.h ansi.h qlib.h \
+  makemail.h
+rdconfig.o: rdconfig.c system.h atptypes.h globals.h reader.h readlib.h \
+  makemail.h qlib.h ansi.h
+read.o: read.c system.h atptypes.h globals.h reader.h readlib.h makemail.h qlib.h \
+  ansi.h
+readlib.o: readlib.c system.h atptypes.h globals.h reader.h readlib.h ansi.h \
+  makemail.h qlib.h
+reply.o: reply.c system.h atptypes.h globals.h reader.h readlib.h ansi.h \
+  makemail.h qlib.h
+system.o: system.c system.h atptypes.h globals.h reader.h readlib.h ansi.h qlib.h
+text.o: text.c system.h atptypes.h globals.h reader.h readlib.h ansi.h

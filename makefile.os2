@@ -1,0 +1,207 @@
+#
+# Makefile for EMX version of ATP 
+# Tested with DMAKE 4.00 and GNU MAKE 3.75 
+# -------------------------------------------------------------------------
+#
+#WARN = -W -Wall -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion \
+#      -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wformat -Wunused
+ 
+srcdir	= .
+#VPATH	= $(srcdir)
+
+CC = gcc
+SHELL	= c:/os2/cmd.exe
+BSHELL	= c:/os2/cmd.exe /c
+# MAKE	= dmake
+MK_FILE	= makefile.os2 
+MK_CMD	= $(MAKE) -f $(MK_FILE)
+
+INSTALL = $(CP)
+INSTALL_PROGRAM = $(CP)
+INSTALL_DATA = $(CP)
+
+LINT = 
+
+# Attention les francophones!
+# Si vous voulez, effacez -DENGLISH dessous et substituez -DFRENCH 
+LANG	= -DENGLISH
+#LANG	= -DFRENCH
+#LANG	= -DGERMAN
+
+DEFS	= -Dunix=1
+LIBS	=
+OPTS	= $(LANG) $(DEFS)
+DBFLG	=
+DBLIB	= 
+OFLG	= -O2 -m486 -fomit-frame-pointer -finline-functions
+BLANK	= ~ 
+
+CFLAGS	= $(OFLG) $(OPTS) $(WARN)
+LDFLAGS	= $(srcdir)/editline/libedit.a $(LIBS) -s
+
+errhand	= 2>nul
+STRIP	= ls -l 
+CD	= $(BSHELL) .\cdir.cmd
+CP	= $(BSHELL) copy
+RM	= - $(BSHELL) del /n $(errhand)
+
+prefix = /usr/local
+exec_prefix = $(prefix)
+bin_prefix =
+man_prefix =
+
+bindir = $(exec_prefix)/bin
+libdir = $(exec_prefix)/lib
+incdir = $(exec_prefix)/include
+mandir = $(exec_prefix)/man/man1
+
+HDRS = ansi.h atptypes.h globals.h makemail.h qlib.h reader.h readlib.h system.h
+
+OBJS = ansi.o atpmain.o chosetag.o display.o makemail.o mkindex.o purge.o qlib.o rdconfig.o read.o readlib.o reply.o system.o text.o
+
+SRCS = ansi.c atpmain.c chosetag.c display.c makemail.c mkindex.c purge.c qlib.c rdconfig.c read.c readlib.c reply.c system.c text.c
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+all:	knowname atp.exe
+	$(CD) utils $(MK_CMD) all
+
+atp.exe: $(OBJS) eline
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+	emxbind -a $@ -p
+	emxbind -i $@
+	
+rot13.exe: knowname
+	$(CD) utils $(MK_CMD) rot13.exe
+	$(CP) .\utils\rot13.exe .
+
+cdir.cmd: utils\batch\CDIR.IN
+	$(CP) $? $@
+
+tstmymak.cmd: utils\batch\TSTMYMAK.IN
+	$(CP) $? $@
+
+knowname: cdir.cmd tstmymak.cmd .FORCE
+	@ $(BSHELL) tstmymak.cmd $(MK_FILE) $(MAKE) 2>nul
+
+atpdbg: $(OBJS) eline
+	$(CC) -g -o $@ $(OBJS) $(DBLIB) editline/libedit.a -ltermcap 
+	
+install: knowname all
+	@echo $(BLANK) 
+	@$(STRIP) $(srcdir)/atp.exe
+	$(INSTALL) $(srcdir)/atp.exe $(bindir)
+	$(INSTALL_DATA) $(srcdir)/docs/atp.1 $(mandir)
+	$(CD) utils $(MK_CMD) install"
+	@echo $(BLANK) 
+	@echo $(BLANK) 
+	@echo   The ATP executable and man pages are now installed.  Now you must
+	@echo   choose a home directory for the ATP configuration files and
+	@echo   message bases.  Usually a subdirectory of your home directory is
+	@echo   a good choice. Copy the atprc file and taglines.atp from the docs
+	@echo   subdirectory to the ATP home directory. Do not overwrite your old
+	@echo   versions by accident--you might want to refer to them.  Edit your
+	@echo   config.sys or shell .profile to set the environment variable ATP
+	@echo   to point to the ATP home directory.  Edit and configure the atprc
+	@echo   to suit your taste. Read the atp man page and docs for usage tips.
+	@echo $(BLANK)	
+	@echo $(BLANK) 
+
+debug:
+	$(MAKE) atpdbg
+
+uninstall: knowname
+	@-$(RM) $(bindir)/atp.exe
+	@-$(RM) $(mandir)/atp.1 
+	@-$(CD) utils $(MK_CMD) uninstall
+
+callmap: 
+	calls -i $(CFLAGS) -f main $(SRCS) > callmap
+
+# editline library
+eline: knowname .FORCE
+	$(CD) editline $(MK_CMD) libedit.a
+
+elinedb: knowname .FORCE
+	$(CD) editline $(MK_CMD) debug
+
+atp.doc: docs/atp.1
+	groff -man docs/atp.1 | sed -e "s/.//g" > docs/atp.doc
+
+edl.doc:
+	groff -man Docs/editline.3 | sed -e "s/.//g" > Docs/editline.doc
+	
+docs: atp.doc edl.doc
+
+clean: .FORCE
+	$(RM) *.o core clean
+
+mostlyclean: knowname clean
+	$(RM) tags refs atp erro knowname 
+	$(CD) editline $(MK_CMD) clean
+	$(CD) utils $(MK_CMD) mostlyclean
+
+distclean: mostlyclean
+	$(RM) config.status depends atplint
+	$(CD) editline $(MK_CMD) distclean
+	$(CD) utils $(MK_CMD) distclean
+
+spotless: mostlyclean
+	$(RM) config.status depends atplint
+	$(RM) *.obj *.OBJ *.lib *.LIB *.map *.MAP *.exe *.EXE
+	$(CD) utils $(MK_CMD) spotless
+	$(CD) utils $(MK_CMD) distclean
+	$(RM) tstmymak.cmd cdir.cmd
+
+clobber: spotless
+
+tags:
+	ctags -rstv *.[ch]
+
+manifest:
+	ls -l ./* > Manifest	
+
+lint:
+	$(LINT) $(CFLAGS) -Dunix -Dlinux *.c >atplint	
+
+extract:
+	cextract -Dunix -Dlinux -DENGLISH $(SRCS) >test.h
+
+depend:
+	gcc -MM -I./editline $(CFLAGS) $(SRCS) >depends
+
+# empty rule used to force build of a target
+.FORCE: 
+	@$(BSHELL) rem
+
+# dependencies
+ansi.o: ansi.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h
+atpmain.o: atpmain.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+chosetag.o: chosetag.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h qlib.h ansi.h makemail.h
+display.o: display.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+makemail.o: makemail.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+mkindex.o: mkindex.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h qlib.h makemail.h
+purge.o: purge.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h qlib.h ansi.h makemail.h
+qlib.o: qlib.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h qlib.h makemail.h
+rdconfig.o: rdconfig.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+read.o: read.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+readlib.o: readlib.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h makemail.h qlib.h
+reply.o: reply.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h makemail.h qlib.h
+system.o: system.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h qlib.h
+text.o: text.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h
+

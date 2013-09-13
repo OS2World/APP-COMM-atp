@@ -1,0 +1,136 @@
+#
+#  Unix makefile for editline library.
+#
+#  Set your options:
+#	-DANSI_ARROWS		ANSI arrows keys work like emacs.
+#	-DHIST_SIZE=n		History size.
+#	-DUNIQUE_HISTORY	Don't save command if same as last one.
+#
+#  Set your definitions:
+#	-DHAVE_TCGETATTR	Have tcgetattr(), tcsetattr().
+#	-DHAVE_STRDUP		Have strdup().
+#	-DHAVE_PERROR		Have perror() (used in testit)
+#	-DHAVE_DIRENT_H		Use <dirent.h>, not <sys/dir.h>
+#	-DHAVE_UNISTD_H 	Have <unistd.h>	
+#	-DHAVE_TERMCAP_H	Use the termcap library for terminal size,
+#				add -ltermcap to LIBS, below if you set this.
+
+#WARN  = -W -Wall -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion \
+#       -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wformat \
+#       -Wpointer-arith -Wunused -Wcomment -Wswitch
+
+instl_targ = install uninstall
+clean_targ = clean clobber distclean mostlyclean unconvert spotless
+.PHONY     : all dep lint tags $(instl_targ) $(clean_targ)
+
+topdir	= @top_srcdir@
+srcdir  = @srcdir@
+VPATH   = @srcdir@
+SHELL   = /bin/sh
+@SET_MAKE@
+
+CC      = @CC@ 
+AR      = @AR@
+RANLIB  = @RANLIB@
+LINT    = @LINT@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+#DBFLG  = @DBFLG@
+#DBLIB  = @DBLIB@
+DEFS    = @DEFS@
+LIBS    = @LIBS@ $(DBLIB)
+OPTS    = $(DEFS) -DSYS_UNIX=1 -DHIST_SIZE=25 -DUNIQUE_HISTORY=1 -DANSI_ARROWS=1 $(DBFLG)
+OFLG    = -O
+#OFLG   = -O2 -fno-strength-reduce -fomit-frame-pointer
+
+CFLAGS  = $(OFLG) -I$(topdir) $(OPTS) $(WARN) 
+LDFLAGS =
+
+prefix = /usr/local
+exec_prefix = $(prefix)
+bin_prefix =
+man_prefix =
+
+bindir = $(exec_prefix)/bin
+libdir = $(exec_prefix)/lib
+incdir = $(exec_prefix)/include
+mandir = $(exec_prefix)/man/man3
+
+SRCS = editline.c complete.c sysunix.c 
+OBJS = editline.o complete.o sysunix.o 
+HDRS = editline.h edlproto.h msdos.h os9.h unix.h edpublic.h
+
+DISTFILES =
+
+all: libedit.a testit
+
+testit: libedit.a testit.o
+	$(CC) $(LDFLAGS) -o testit testit.o libedit.a $(LIBS) $(DBLIB)
+
+libedit.a: @ATPCNVR@ $(OBJS) 
+	@rm -f libedit.a 
+	$(AR) r libedit.a $(OBJS)
+	$(RANLIB) libedit.a
+
+testit.o : testit.c
+
+install:
+	$(INSTALL_DATA) libedit.a  $(libdir)
+	$(INSTALL_DATA) editline.h $(incdir)
+	$(INSTALL_DATA) editline.3 $(mandir)
+
+uninstall:
+	rm -f $(libdir)/libedit.a  
+	rm -f $(incdir)/editline.h 
+	rm -f $(mandir)/editline.3
+
+clean:
+	rm -f *.o *.a *.obj testit core lint lint.all a.out erro
+
+mostlyclean: clean
+	rm -f tags refs
+
+distclean: mostlyclean
+	rm -f *.obj *.lib
+	rm -f config.log config.cache config.scan configure.scan
+	rm -f Makefile config.status deps lint.all
+	if test -f convert ; then $(MAKE) unconvert ; fi
+
+spotless: distclean
+
+clobber: distclean 
+
+tags:
+	ctags -rstv *.[ch]
+
+convert:
+	for F in $(SRCS) ; do ../ansi2knr $(srcdir)/$$F ansi.tmp ;\
+	mv $(srcdir)/$$F $(srcdir)/$$F~ ; mv ansi.tmp $(srcdir)/$$F ; done
+	for F in $(HDRS) ; do sed -e '/^[^#]/ s/(.*)/()/' $(srcdir)/$$F >ansi.tmp;\
+	mv $(srcdir)/$$F $(srcdir)/$$F~ ; mv ansi.tmp $(srcdir)/$$F ; done
+	touch convert
+
+unconvert:
+	if test -f $(srcdir)/editline.c~ ; then \
+	for F in $(srcdir)/*.c~ ; do mv $$F $(srcdir)/`basename $$F c~`c ; done ;\
+	for F in $(srcdir)/*.h~ ; do mv $$F $(srcdir)/`basename $$F h~`h ; done ;\
+	rm -f convert; fi
+
+lint:   @ATPCNVR@
+	$(LINT) -I$(topdir) $(OPTS) $(SRCS) >lint.all
+
+dep: $(SRCS) testit.c
+	$(CC) -MM $(CFLAGS) $?
+
+editline.o: editline.c editline.h unix.h edlproto.h $(topdir)/atptypes.h \
+ $(topdir)/system.h $(topdir)/globals.h $(topdir)/reader.h $(topdir)/readlib.h \
+ $(topdir)/ansi.h
+complete.o: complete.c editline.h unix.h edlproto.h $(topdir)/atptypes.h
+sysunix.o: sysunix.c editline.h unix.h edlproto.h $(topdir)/atptypes.h
+testit.o: testit.c editline.h unix.h edlproto.h $(topdir)/atptypes.h
+sysos9.o : sysos9.c editline.h 
+
+# end of Makefile

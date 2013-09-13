@@ -1,0 +1,32 @@
+@ECHO OFF
+rem
+rem   Utility to test if `make' knows its own name
+rem
+rem   %1 is the name of the caller's makefile $(MK_FILE)
+rem   %2 is the expanded macro $(MAKE) 
+rem
+IF NOT "%2" == "" GOTO end
+echo .  
+echo ATTENTION: your version of MAKE does not know its own name.
+echo Please edit your makefile by uncommenting the MAKE macro near
+echo the top of it, and adding the name of your MAKE utility.
+echo .  
+echo Example:   MAKE = pdmake
+echo .  
+echo Most newer versions of MAKE know their own name, so do not
+echo edit or uncomment the MAKE macro unless you receive this 
+echo warning message. Note that %1 is designed to work
+IF "%1" == "makefile.os2" GOTO skip1
+echo with make utilities such as nmake, pdmake, and dmake. Please 
+echo be aware that ndmake45 is *broken*, but ndmake43 will work fine.
+echo And users of Borland make should use makefile.tcc instead.
+GOTO skip2
+:skip1
+echo with Unix-like make utilities such as pdmake, dmake, and GNU make. 
+echo Using other versions of make may or may not work.
+:skip2
+echo .  
+this_is_an_intentional_error
+:end
+echo MAKEFILE type = %1
+echo MAKE = %2

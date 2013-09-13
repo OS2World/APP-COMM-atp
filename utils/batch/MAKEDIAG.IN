@@ -1,0 +1,18 @@
+@echo off
+copy atpdiag.in atpdiag.tmp
+if exist edlin.in goto skip
+
+:: these echo commands create edlin.in
+echo 5,8d>edlin.in
+echo s@UNIX@>>edlin.in
+echo .d>>edlin.in
+echo s@UNIX@>>edlin.in
+echo .d>>edlin.in
+echo s@OS2@>>edlin.in
+echo .d>>edlin.in
+echo e>>edlin.in
+
+:skip
+edlin atpdiag.tmp < edlin.in
+if exist ATPDIAG.BAT del ATPDIAG.BAT 
+rename atpdiag.tmp ATPDIAG.BAT

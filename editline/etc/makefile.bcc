@@ -1,0 +1,29 @@
+# Makefile for editline library for Borland C/C++ 3.1
+#
+CC = bcc
+CFLAGS = -ml -f- -H=EDITLINE.SYM -DANSI_ARROWS -DHIDE -DUNIQUE_HISTORY
+SRC = editline.c complete.c sysdos.c
+OBJ = editline.obj complete.obj sysdos.obj
+
+.c.obj:
+	$(CC) -c -w-par $(CFLAGS) { $*.c }
+
+all: libedit.lib 
+
+libedit.lib: $(OBJ)
+	-@del libedit.lib > nul
+	tlib libedit /c +editline +complete +sysdos
+
+editline.obj  : editline.h edlproto.h msdos.h
+
+complete.obj  : editline.h msdos.h
+
+sysdos.obj    : editline.h msdos.h
+
+
+lint:
+	clint -oedlint -D__MSDOS__ -DANSI_ARROWS editline.c complete.c sysdos.c 
+
+clean:
+	del *.obj
+	del *.lib

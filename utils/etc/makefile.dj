@@ -1,0 +1,124 @@
+# DJGPP Makefile ATP utilities (for use with GNU Make)
+# tested with GNU Make
+
+DEFS	= 
+CC	= gcc 
+CFLAGS	= -O
+LDFLAGS	=
+SED	= edlin
+STRIP	= strip
+INSTALL	= xcopy
+PERL	= perl
+SHELL	= command.com 
+MV	= rename
+RM	= @-del
+
+prefix	= \usr\local
+exec_prefix = $(prefix)
+bindir	= $(exec_prefix)\bin
+mandir	= $(prefix)\man\man1
+
+#manown	= -o daemon -g daemon
+#binown	= -o bin -g bin
+
+%.exe : %.cof
+	$(STRIP) $<
+	coff2exe $<
+
+all: ansi2knr.exe rot13.exe atpdiag.bat
+
+ansi2knr.exe: ansi2knr.cof
+
+rot13.exe: rot13.cof
+
+ifneq ($(SED),edlin)  # we use sed:
+
+atpdiag.bat: atpdiag.in
+	$(SED) -e 4,7d -e s/@PERLPATH@/$(PERL)/ -e /@OS2@/d -e /@UNIX@/d atpdiag.in > atpdiag.tmp
+	@if exist $@ del $@
+	$(MV) atpdiag.tmp $@
+
+else  # we use edlin:
+
+atpdiag.bat: atpdiag.in
+	copy atpdiag.in atpdiag.tmp
+	echo 5,8d s@UNIX@>mysed.tmp
+	echo .d s@UNIX@>>mysed.tmp
+	echo .d s@OS2@>>mysed.tmp
+	echo .d e >>mysed.tmp
+	edlin atpdiag.tmp <mysed.tmp
+	@if exist $@ del $@
+	$(MV) atpdiag.tmp $@
+	@del mysed.tmp
+
+endif
+
+ansi2knr.cof: ansi2knr.c stdio_.h string_.h malloc_.h
+	$(CC) $(CFLAGS) -o ansi2knr.cof ansi2knr.c $(LDFLAGS)
+
+rot13.cof:   rot13.c
+	$(CC) $(CFLAGS) $(DEFS) -o rot13.cof rot13.c
+
+convert: ansi2knr.exe
+	.\ansi2knr rot13.c >ansi.tmp
+	$(MV) rot13.c rot13.c~ 
+	$(MV) ansi.tmp rot13.c
+	echo "convert" >convert
+
+unconvert: rot13.c~
+	@if exist rot13.c del rot13.c 
+	$(MV) rot13.c~ rot13.c
+	@if exist convert del convert
+
+install: ansi2knr.exe ansi2knr.1 atpdiag.bat atpdiag.1 rot13.exe rot13.1
+	$(INSTALL) rot13.exe $(bindir)
+	$(INSTALL) rot13.1 $(mandir)
+	$(INSTALL) ansi2knr.exe $(bindir)
+	$(INSTALL) ansi2knr.1 $(mandir)
+	$(INSTALL) atpdiag.bat $(bindir)
+	$(INSTALL) atpdiag.1 $(mandir)
+
+foo:
+	$(INSTALL) rot13.1 $(mandir)
+
+uninstall:
+	$(RM) $(bindir)/ansi2knr.exe 
+	$(RM) $(mandir)/ansi2knr.1
+	$(RM) $(bindir)/atpdiag.bat 
+	$(RM) $(mandir)/atpdiag.1
+	$(RM) $(bindir)/rot13.exe 
+	$(RM) $(mandir)/rot13.1
+
+clean:
+	$(RM) ansi2knr.exe
+	$(RM) ansi.tmp
+	$(RM) core
+	$(RM) erro
+	$(RM) *.o 
+	$(RM) atpdiag.tmp 
+	$(RM) rot13.exe
+	$(RM) *.cof
+
+mostlyclean: clean
+	if exist atpdiag.bat del atpdiag.bat
+
+clobber: clean
+	$(RM) atpdiag.bat
+	$(RM) *.bak
+	$(RM) *.obj
+	$(RM) *.map
+	$(RM) *.lib
+
+distclean: clobber
+	$(RM) atpdiag
+	$(RM) atpdiag.cmd
+	$(RM) atpdiag.bat
+	$(RM) ansi2knr
+	$(RM) ansi2knr.exe
+	$(RM) rot13
+	$(RM) rot13.exe
+	$(RM) *.bat
+
+depend:
+	$(CC) -MM $(CFLAGS) ansi2knr.c rot13.c >depend
+

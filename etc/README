@@ -1,0 +1,4 @@
+This directory contains various makefiles for different non-Unix
+compilers and non-Unix operating systems. They have not been 
+tested by me but were submitted by others. They probably will
+require some work to make them current.

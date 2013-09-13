@@ -1,0 +1,20 @@
+Some of the changes to ATP in this 1.50 release are:
+
+o Full termcap support for non-ansi terminals. 
+o No limits on message size for any version. 
+o Replies can now be directed to any message area with `r' command. 
+o New 'x' command for cross posting. 
+o Improved `r' and `c' commands for re-directing replies to different areas.
+o Use ^C to cancel `find' search.  
+o Perl script `atpdiag' to help diagnose proper configuration.  
+o Rot-13 message shroud/unshroud added. 
+o Tagline steal/add (contributed by Tom Glaab--thanks!). 
+o Tagline `tag on/off' commands added. 
+o Ready-to-print PostScript format documentation added.
+o MS_DOS 16 bit version can swap itself out when spawning sub-shell.
+o MS_DOS versions now DESQview aware. 
+o GNU autoconf provides configure script for building ATP on Unix systems.
+o Can be built with Standard C, C++, and traditional Kernighan & Ritchie C.
+o Code re-organized for greater modularity and maintainability.
+o Various bug fixes and improvements.
+

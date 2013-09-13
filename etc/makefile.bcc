@@ -1,0 +1,124 @@
+# -------------------------------------------------------------------------
+#
+# Borland C/C++ Makefile for MS-DOS version of ATP Nov 28, 1992
+#
+# NOTE: Unix and D.J.Delore GCC for DOS use *other* makefiles!!!
+#
+# Read all this stuff first running make!
+#
+# -------------------------------------------------------------------------
+# This makefile has been used and tested under Borland C++ version 3.1.
+# It should compile ATP easily. A couple of cautionary
+# warnings will be generated but these are bogus. The BCC version of
+# ATP is identical to the Unix version except for somewhat smaller limits
+# because of MS_DOS memory segmentation considerations.  Limits are
+# smaller but in practice this should not be much of a problem since even
+# the reduced limits of the BCC version are about an order of magnitude more
+# generous than most QWK readers for MS-DOS. 
+#
+# Make sure that you have a goodly number of files and buffers set in your
+# CONFIG.SYS before compiling. About 20 for each is a fine choice.
+# Remember that to use ATP under MS-DOS you must have ANSI.SYS installed.
+# You must configure your 'atprc' initialization script also. Read the
+# docs! It is suggested that the large memory model be used for compilation
+# under Borland C++ for DOS. 
+#
+# -------------------------------------------------------------------------
+# Here we set the compiler to Borland C++
+#
+MAKE = make
+CC = bcc
+LINK = tlink
+#LD = 
+LINT = clint
+# -------------------------------------------------------------------------
+# Here we set the Lib path to the run-time libraries.
+#
+LIBPATH=C:\UTILS\BC\LIB
+# -------------------------------------------------------------------------
+# Here are the flags to enable or suppress warning messges
+#
+WALL = -w-aus -wnod -wpro
+#
+# -------------------------------------------------------------------------
+# Attention les francophones!
+# Si vous voulez, effacez -DENGLISH dessous et substituez -DFRENCH 
+#
+#CFLAGS  =  -DFRENCH -ml -f- -H=ATP.SYM $(WALL) 
+CFLAGS = -DENGLISH -ml -f- -H=ATP.SYM $(WALL) 
+STRIP = dir  
+#
+# -------------------------------------------------------------------------
+#
+HEADERS = readlib.h makemail.h system.h ansi.h qlib.h reader.h 
+#
+OBJECTS = read.obj readlib.obj makemail.obj system.obj ansi.obj qlib.obj text.obj chosetag.obj
+#
+SRC = read.c readlib.c makemail.c system.c ansi.c qlib.c text.c chosetag.c
+#
+
+.c.obj:
+	$(CC) -c -O $(CFLAGS) { $*.c }
+
+all:    atp.exe
+
+atp.exe:  $(OBJECTS) eline
+	$(LINK) /x/c/P-/L$(LIBPATH) @&&|
+c0l.obj $(OBJECTS)
+atp.exe
+		# no map file
+cl.lib editline\libedit.lib
+|
+	$(STRIP) atp.exe
+	
+#
+#
+ansi.obj     : ansi.c ansi.h
+
+chosetag.obj : chosetag.c reader.h 
+
+makemail.obj : makemail.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+qlib.obj     : qlib.c system.h ansi.h qlib.h reader.h readlib.h 
+
+read.obj     : read.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+readlib.obj  : readlib.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+system.obj   : system.c system.h ansi.h 
+
+text.obj     : text.c system.h ansi.h reader.h 
+
+#
+# ----------------------------------------------------------------------
+# libedit.lib provides the command-line editing and history recall.
+
+eline:
+		cd editline
+		$(MAKE) -fmakefile.bcc 
+		cd ..
+	
+docs:
+	groff -man atp.1 | sed -e "s/.//g" > atp.doc		
+
+lint: 
+	$(LINT) -oatplint -DENGLISH -D__MSDOS__ -D__TURBOC__ *.c 
+	
+clean:
+	del *.obj 
+	del atp.exe 
+	
+clobber:
+	del *.obj 
+	del atp.exe 
+	del *.bak
+	del *.lib
+	cd editline
+	make -fmakefile.bcc clean
+	cd ..
+
+manifest:
+	dir *.* > Manifest	
+
+#
+#------------------------------- end of makefile ---------------------------

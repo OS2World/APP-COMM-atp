@@ -1,0 +1,162 @@
+--------------
+ATP Utilities
+--------------
+
+1) ansi2knr -- Used by main Makefile to build ATP on non-ansi systems.
+               It converts ANSI C to old style K&R C . The main Makefile
+               is also aided by some sed scripting in the conversion
+               process. See main Makefile for details under target 'convert'.
+               This program originated in the GNU Ghostscript package. 
+
+2) atpdiag  -- A Perl script useful during ATP installation and configuration.
+               It examines the environment and your 'atprc' file for possible
+               conflicts, reporting informational and diagnostic messages.
+               Install atpdiag in your path, and invoke: atpdiag
+
+3) funcfind  -- A shell script that will extract a brief description of
+                functions from the ATP C source code. You can select
+                descriptions of static functions, external functions or both.
+                Run funcfind with the --help flag for more information.
+
+4) rot13     -- A filter to rot-13 encode/decode a text file. Use with an
+                editor like vi as you would any text filter (e.g. fmt).
+                Rot-13 encoding is not secure, and is intended merely to
+                shroud sensitive eyes from vulgar or offensive text. 
+
+Building the utilities: 
+  * run the configure script in the top level directory: ./configure
+  * in the 'utils' directory type 'make all'
+  * if all goes well type 'make install' 
+
+Formatted man pages follow:
+
+========================================================================
+ANSI2KNR(1)                                           ANSI2KNR(1)
+
+
+NAME
+       ansi2knr - convert ANSI C to Kernighan & Ritchie C
+
+SYNOPSIS
+       ansi2knr input_file output_file
+
+DESCRIPTION
+       If no output_file is supplied, output goes to stdout.
+       There are no error messages.
+
+       ansi2knr  recognizes  functions  by  seeing  a non-keyword
+       identifier at the left margin, followed by a  left  paren-
+       thesis,  with a right parenthesis as the last character on
+       the line.  It will recognize a multi-line  header  if  the
+       last  character on each line but the last is a left paren-
+       thesis or comma.  These algorithms ignore  whitespace  and
+       comments,  except that the function name must be the first
+       thing on the line.
+
+       The following constructs will confuse it:
+            - Any other construct that starts at the left  margin
+       and  follows the above syntax (such as a macro or function
+       call).
+            - Macros that tinker with the syntax of the  function
+       header.
+
+                         31 December 1990                       
+========================================================================
+
+ATPDIAG(1)                                             ATPDIAG(1)
+
+
+NAME
+       atpdiag - checks ATP qwk reader configuration.
+
+SYNOPSIS
+       atpdiag
+
+DESCRIPTION
+       A diagnostic script written in Perl, useful during instal-
+       lation of ATP qwk news/mail  reader,  and  for  diagnosing
+       possible  configuration  problems.   Atpdiag looks for the
+       environment variable ATP.  Atpdiag then searches  for  the
+       configuration  file  atprc.   If that file can be success-
+       fully opened, atpdiag parses the atprc checking  specified
+       paths  and  support programs for existence and accessibil-
+       ity. Informational, warning, and error messages  are  dis-
+       played.
+
+       Perhaps  the  most  common  ATP  installation error is the
+       failure to set and export the  ATP  environment  variable.
+       Normally  this  should be done in the user's shell startup
+       file such as the .profile in the  user's  home  directory.
+       ATP  expects  the environment variable ATP to point to the
+       directory where ATP  will  keep  its  atprc  configuration
+       files and message bases.
+
+SEE ALSO
+       atp(1)
+
+                         12 October 1994                        
+===========================================================================
+
+ROT13(1)            Linux Programmer's Manual            ROT13(1)
+
+
+NAME
+       rot13 - shroud text with simple rot-13 cypher
+
+SYNOPSIS
+       rot13 [input [output]]
+
+DESCRIPTION
+       This  manual  page documents the rot13 text filter.  If no
+       filenames are specified, rot13 reads from stdin and writes
+       to stdout.  If one filename is specified, rot13 reads from
+       that file and writes to  stdout.   If  two  filenames  are
+       specified,  rot13  reads from the first file and writes to
+       the second file. You may use rot13 inside  the  vi  editor
+       just as you would other filters, e.g. fmt.
+
+       Rot13 performs Usenet-standard rot-13 encryption.  This is
+       done by taking the input letter and shifting it left by 13
+       characters, so an A becomes an N, a B becomes an O, and so
+       forth. Applying rot13 a second time restores the  original
+       text.  The  encrypted  version  of the sentence `The quick
+       brown fox jumps over the lazy dog.' looks like this:
+
+            Gur dhvpx oebja sbk whzcf bire gur ynml qbt.
+
+
+       Note that rot-13 is obviously not secure  encryption.  The
+       main  purpose  of  rot13  is to shield sensitive eyes from
+       potentially offensive or disturbing public messages.  Most
+       news  readers  provide a command to decode rot13 messages.
+       For example, the tin news reader uses the command 'd'.
+
+AUTHOR
+       The original author is Marc Unangst.  Various ways of con-
+       tacting him are:
+            mju@mudos.ann-arbor.mi.us
+            ...!umich!leebai!mudos!mju
+            Marc Unangst of 1:2200/129.0@fidonet.org
+
+       The  1994  update  was  done  by  Thomas  McWilliams.  See
+       Changelog in the source distribution for details.
+
+COPYING
+       Distribution permitted under the terms of the GNU  General
+       Public License, version 2 (or later versions at your pref-
+       erence). Copies of this agreement are available from:
+
+            Free Software Foundation, Inc.,
+            675 Mass Ave,
+            Cambridge, MA 02139, USA.
+
+
+
+
+
+
+
+
+Linux                      01 Sept 1994                         1
+
+

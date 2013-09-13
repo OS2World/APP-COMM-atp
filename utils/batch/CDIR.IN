@@ -1,0 +1,12 @@
+@echo off
+rem
+rem   cdir.cmd: makefile helper utility for OS/2 and MSDOS.
+rem
+rem   Invoked from makefile to change to subdirectory %1 and execute %2.
+rem   This allows us to spoof a Bourne Shell type syntax inside the makefile. 
+rem
+rem
+rem echo on
+cd %1
+%2 %3 %4 %5 %6 %7 %8 %9
+cd ..

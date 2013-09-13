@@ -1,0 +1,285 @@
+#
+# Makefile for UNIX version of ATP 
+# -------------------------------------------------------------------------
+
+# ---------------------------------------------------------------
+# definitions for installation: paths, permissions, and language
+# ---------------------------------------------------------------
+
+# shell and make paths
+srcdir	= @srcdir@
+VPATH	= @srcdir@
+SHELL	= /bin/sh
+@SET_MAKE@
+
+# installation paths
+INSTALL = @INSTALL@
+prefix = @prefix@
+exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
+mandir = $(prefix)/man
+
+# path where your ATP data and configuration files will reside:
+atphome = @ATPHOME@
+
+# permissions and ownership
+bin_prm = 755
+bin_own = @bin_own@
+bin_grp = @bin_grp@
+man_prm = 644
+man_own = @man_own@
+man_grp = @man_grp@
+
+# Attention les francophones!
+# Si vous voulez, effacez -DENGLISH dessous et substituez -DFRENCH
+# German users define -DGERMAN
+LANG = -DENGLISH
+
+# -----------------
+# compiler options 
+#------------------
+
+# warnings specific to GNU gcc
+# WARN = -W -Wall -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion \
+#       -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wformat \
+#       -Wpointer-arith -Wunused -Wcomment -Wswitch
+# export WARN
+
+# compiler and support programs
+CC   = @CC@ 
+STRIP= @STRIP@
+LINT = @LINT@ 
+
+# definitions and options
+DEFS = @DEFS@
+LIBS = @LIBS@
+OPTS = $(LANG) -DSYS_UNIX $(DEFS) -DATPUNAM=\"@UNAME_S@\"
+#DBFLG = @DBFLG@
+#DBLIB = @DBLIB@
+OFLG = -O
+#OFLG = -O2 -fno-strength-reduce -fomit-frame-pointer -finline-functions
+
+CFLAGS = $(OFLG) $(OPTS) $(WARN) $(DBFLG)
+LDFLAGS = ./editline/libedit.a $(LIBS) $(DBFLG) $(DBLIB)
+
+# --------------------------------------------------------------
+# text formatting commands to generate plain text from man pages
+# --------------------------------------------------------------
+TBL	= @A_TBL@
+ROFF	= @ROFF@ @A_DEVRF@ -man
+SCOL	= sed -e "s/.//g"
+UCOL	= @A_UCOL@
+COL	= $(@A_COL@)
+
+# ------------------------------------------------------ 
+# THERE ARE NO CONFIGURATION VARIABLES BELOW THIS POINT
+# ------------------------------------------------------
+
+# phony targets (a.k.a "forced" targets)
+clean_targ = clean distclean clobber spotless mostlyclean unconvert
+devel_targ = callmap check depend extract lint tags
+instl_targ = install uninstall in_cfg in_man in_wrap
+misc_targ  = debug dvi info eline elinedb manifest 
+.PHONY     : $(clean_targ) $(devel_targ) $(instl_targ) $(misc_targ)
+
+HDRS = readlib.h makemail.h system.h ansi.h qlib.h reader.h 
+
+OBJS = read.o readlib.o makemail.o system.o ansi.o qlib.o mkindex.o\
+	text.o chosetag.o purge.o display.o reply.o atpmain.o rdconfig.o
+
+SRCS = read.c readlib.c makemail.c system.c ansi.c qlib.c mkindex.c\
+	text.c chosetag.c purge.c display.c reply.c atpmain.c rdconfig.c
+
+all:	atp 
+	cd utils ; $(MAKE) all
+
+atp:    @ATPCNVR@ $(OBJS) eline
+	$(CC) -o atp $(OBJS) $(LDFLAGS)
+
+atpdbg: $(OBJS) eline
+	$(CC) -g -o atpdbg $(OBJS) $(DBLIB) $(LDFLAGS)
+	
+ansi2knr: $(srcdir)/utils/ansi2knr.c
+	cd utils ; $(MAKE) ansi2knr
+	cp ./utils/ansi2knr .
+
+utils/atpdiag:
+	cd utils ; $(MAKE) atpdiag
+
+utils/rot13:
+	cd utils ; $(MAKE) rot13
+
+install: in_bin in_man in_cfg in_wrap
+
+in_cfg:	
+	@echo " "
+	@echo "Installing configuration files . . ."
+	@test -d $(atphome) || @MKDIR@ $(atphome)
+	@if [ -f $(atphome)/atprc ] ;\
+	then  mv $(atphome)/atprc $(atphome)/atprc.old ;\
+	echo "NOTE: atprc already exists, moved to $(atphome)/atprc.old" ;\
+	fi
+	@if [ -f $(atphome)/.atprc ] ;\
+	then  mv $(atphome)/.atprc $(atphome)/.atprc.old ;\
+	echo "NOTE: .atprc already exists, moved to $(atphome)/.atprc.old" ;\
+	fi
+	@$(INSTALL) -m 640 $(srcdir)/docs/atprc $(atphome)
+	@if [ -f $(atphome)/taglines.atp ] ;\
+	then  echo "NOTE: taglines.atp already exists, check $(atphome)/taglines.atp" ;\
+	else  $(INSTALL) -m 640 $(srcdir)/docs/taglines.atp $(atphome) ;\
+	fi
+
+in_bin: atp utils/atpdiag utils/rot13
+	@echo " "
+	@echo "Installing binaries . . ."
+	@$(STRIP) atp ./utils/rot13
+	$(INSTALL) -m $(bin_prm) -o $(bin_own) -g $(bin_grp) ./atp $(bindir)/atp
+	$(INSTALL) -m $(bin_prm) -o $(bin_own) -g $(bin_grp) ./utils/atpdiag $(bindir)/atpdiag
+	$(INSTALL) -m $(bin_prm) -o $(bin_own) -g $(bin_grp) ./utils/rot13 $(bindir)/rot13
+
+in_wrap:
+	@echo " "
+	@echo "Now it's YOUR turn, please do this:"
+	@echo "Set and export the environment variable: ATP=$(atphome)"
+	@echo "Edit your $(atphome)/atprc and then read the docs!"
+
+in_man:
+	@echo " "
+	@echo "Installing man pages . . ."
+	$(INSTALL) -m $(man_prm) -o $(man_own) -g $(man_grp) $(srcdir)/docs/atp.1 $(mandir)/man1
+	$(INSTALL) -m $(man_prm) -o $(man_own) -g $(man_grp) $(srcdir)/docs/editline.3 $(mandir)/man3
+	$(INSTALL) -m $(man_prm) -o $(man_own) -g $(man_grp) $(srcdir)/docs/atpdiag.1 $(mandir)/man1
+	$(INSTALL) -m $(man_prm) -o $(man_own) -g $(man_grp) $(srcdir)/docs/rot13.1 $(mandir)/man1
+
+uninstall:
+	rm -f $(mandir)/man1/atp.1 $(mandir)/man1/atpdiag.1 $(mandir)/man1/rot13.1
+	rm -f $(mandir)/man3/editline.3
+	rm -f $(bindir)/atp $(bindir)/atpdiag $(bindir)/rot13
+	rm -f $(atphome)/atprc $(atphome)/taglines.atp
+
+uncfg: uninstall
+	rmdir $(atphome)
+
+debug:
+	$(MAKE) atpdbg
+
+check:
+	@echo "After installation, run atpdiag." 
+
+callmap: 
+	calls -i $(CFLAGS) -f main $(SRCS) > callmap
+
+dvi:
+	cd docs ; $(MAKE) dvi
+
+info:
+	cd docs ; $(MAKE) info
+
+# editline library
+eline:
+	cd editline ; $(MAKE) libedit.a 
+
+elinedb:
+	cd editline ; $(MAKE) debug
+
+atp.txt: docs/atp.1
+	$(TBL) $? | $(ROFF) | $(COL) > atp.txt
+
+editline.txt: docs/editline.3
+	$(ROFF) $? | $(COL) > editline.txt
+	
+atpdiag.txt: docs/atpdiag.1
+	$(ROFF) $? | $(COL) > atpdiag.txt
+
+txt: atp.txt atpdiag.txt editline.txt
+
+clean:
+	rm -f *.o core config.cache
+	rm -f $(clean_targ) $(devel_targ) $(instl_targ) $(misc_targ)
+
+mostlyclean: clean
+	rm -f tags refs atp erro atpdiag test.h
+	rm -f config.cache config.log configure.scan
+	rm -f atp.txt editline.txt
+	cd editline ; $(MAKE) clean
+	cd utils ; $(MAKE) mostlyclean
+
+distclean: mostlyclean
+	$(MAKE) unconvert
+	cd editline ; $(MAKE) distclean
+	cd utils ; $(MAKE) distclean
+	cd docs ; $(MAKE) distclean
+	rm -f *.obj *.lib *.map
+	rm -f Makefile config.status depends ansi2knr convert atplint
+
+spotless: distclean
+
+clobber: distclean
+
+tags:
+	rm -f tags
+	ctags -rstv *.[ch]
+
+manifest:
+	@echo "ATP Manifest and MD5 checksum" >Manifest
+	@echo " " >>Manifest
+	find $(srcdir) -type f -follow -print | xargs md5 >>Manifest
+
+lint:   @ATPCNVR@
+	$(LINT) $(OPTS) -Dunix=1 -D__linux__=1 $(SRCS) >atplint	
+
+extract:
+	cextract +a $(OPTS) -D__i386__=1 -Dunix=1 -D__linux__=1 $(SRCS) >test.h
+
+convert: ansi2knr
+	for F in $(SRCS) ; do ./ansi2knr $(srcdir)/$$F ansi.tmp ;\
+	mv $(srcdir)/$$F $(srcdir)/$$F~ ; mv ansi.tmp $(srcdir)/$$F ; done
+	for F in $(HDRS) ; do sed -e '/^[^	#|& ]/ s/(.*)/()/' $(srcdir)/$$F >ansi.tmp;\
+	mv $(srcdir)/$$F $(srcdir)/$$F~ ; mv ansi.tmp $(srcdir)/$$F ; done
+	sed -e "/^#define [FN]TAG/ s/\" ATPSYST ATPVER \"/@UNAME_S@ @ATPVER@ /" \
+	$(srcdir)/system.h >ansi.tmp ; mv ansi.tmp $(srcdir)/system.h
+	cd ./editline ; $(MAKE) convert
+	cd ./utils ; $(MAKE) convert
+	touch convert
+
+unconvert:
+	if test -f $(srcdir)/atpmain.c~ ; then \
+	for F in $(srcdir)/*.c~ ; do mv $$F $(srcdir)/`basename $$F c~`c ; done ; \
+	for F in $(srcdir)/*.h~ ; do mv $$F $(srcdir)/`basename $$F h~`h ; done ; \
+	fi
+	cd ./editline ; $(MAKE) unconvert
+	cd ./utils ; $(MAKE) unconvert
+	rm -f ./ansi2knr ./convert
+
+depend:
+	gcc -MM -I./editline $(CFLAGS) $(SRCS) >depends
+
+read.o: read.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+readlib.o: readlib.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h makemail.h qlib.h
+makemail.o: makemail.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+system.o: system.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h qlib.h
+ansi.o: ansi.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h
+qlib.o: qlib.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h qlib.h makemail.h
+mkindex.o: mkindex.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h qlib.h makemail.h
+text.o: text.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h
+chosetag.o: chosetag.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h qlib.h ansi.h makemail.h
+purge.o: purge.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h qlib.h ansi.h makemail.h
+display.o: display.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+reply.o: reply.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h ansi.h makemail.h qlib.h
+atpmain.o: atpmain.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+rdconfig.o: rdconfig.c reader.h globals.h system.h atptypes.h \
+ editline/edpublic.h readlib.h makemail.h qlib.h ansi.h
+#

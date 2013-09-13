@@ -1,0 +1,157 @@
+##
+##  DJGPP makefile for editline library (for use with GNU Make)
+##
+##  NOTE: Options and definitions have been pre-set for EMX in the 
+##        file editline.h. The following descriptions are only for 
+##        informational purposes.
+##
+##  Set your options:
+##	-DANSI_ARROWS		ANSI arrows keys work like emacs.
+##	-DHIST_SIZE=n		History size.
+##	-DUNIQUE_HISTORY	Don't save command if same as last one.
+##
+##  Set your definitions:
+##	-DHAVE_TCGETATTR	Have tcgetattr(), tcsetattr(). [unix only]
+##	-DHAVE_STRDUP		Have strdup().
+##	-DHAVE_PERROR		Have perror() (used in testit)
+##	-DHAVE_DIRENT_H		Use <dirent.h>, not <sys/dir.h>
+##	-DHAVE_UNISTD_H 	Have <unistd.h>	
+##	-DHAVE_TERMCAP_H	Have <termcap.h>
+##	-DHAVE_LIBTERMCAP	Use the termcap library for terminal size,
+##				add -ltermcap to LIBS, below if you set this.
+
+WARN	= -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wwrite-strings \
+	-Wunused -Wcomment -Wswitch
+
+#srcdir	= .
+#VPATH	= .
+
+#CC = gcc -x c++
+CC = gcc
+
+INSTALL = 
+INSTALL_PROGRAM = xcopy
+INSTALL_DATA	= xcopy
+
+#DBFLG	= -DMEMDEBUG
+#DBLIB	= -lmemdb
+DEFS	= -Dunix=1 -DDJGPP
+LIBS	= $(DBLIB)
+OPTS	= $(DEFS) -DHIST_SIZE=25 -DUNIQUE_HISTORY -DANSI_ARROWS
+OFLG	= -O2 -m486 -fno-strength-reduce -fomit-frame-pointer
+
+CFLAGS	= $(OFLG) -I.. $(OPTS) $(WARN) $(DBFLG)
+LDFLAGS =  
+RANLIB	= dir
+STRIP	= strip
+LINT	= 
+RM	= @-del
+MV	= rename
+
+prefix = /usr/local
+exec_prefix = $(prefix)
+bindir = $(exec_prefix)/bin
+libdir = $(prefix)/lib
+incdir = $(prefix)/include
+mandir = $(prefix)/man/man1
+
+#SHELL = /bin/sh
+
+SRCS = editline.c complete.c sysdos.c
+OBJS = editline.o complete.o sysdos.o
+HDRS = editline.h edlproto.h msdos.h os9.h unix.h
+
+%.exe : %.cof
+	$(STRIP) $<
+	coff2exe $<
+
+%.c~ : %.c
+	ansi2knr $< $<tm
+	$(MV) $< $@
+	$(MV) $<tm $<
+
+%.h~ : %.h
+	sed -e '/^[^#]/ s/(.*)/()/' $< > $<tm
+	$(MV) $< $@
+	$(MV) $<tm $<
+
+all: libedit.a testit.exe
+
+testit.exe: testit.cof
+
+testit.cof: testit.o libedit.a
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) $(DBLIB)
+
+libedit.a: $(OBJS) 
+	$(RM) -f $@
+	ar r $@ $(OBJS)
+	$(RANLIB) $@
+
+install: libedit.a editline.h editline.1
+	$(INSTALL_DATA) libedit.a  $(libdir)
+	$(INSTALL_DATA) editline.h $(incdir)
+	$(INSTALL_DATA) editline.1 $(mandir)
+
+uninstall:
+	$(RM) $(libdir)\libedit.a  
+	$(RM) $(incdir)\editline.h 
+	$(RM) $(mandir)\editline.1 
+
+clean:
+	$(RM) *.a
+	$(RM) *.o
+	$(RM) core
+	$(RM) a.out
+	$(RM) erro
+
+mostlyclean: clean
+	$(RM) tags 
+	$(RM) refs
+	$(RM) *.exe
+
+distclean: spotless
+
+clobber: spotless 
+
+spotless: mostlyclean
+	$(RM) *.obj
+	$(RM) *.lib
+	$(RM) config.log
+	$(RM) config.cache
+	$(RM) config.scan
+	$(RM) configure.scan
+	$(RM) config.status
+	$(RM) depend
+	$(RM) lint.all
+	$(RM) edlint
+
+tags:
+	ctags -rstv *.[ch]
+
+convert: editline.c~ complete.c~ sysdos.c~ editline.h~ edlproto.h~ msdos.h~ unix.h~
+	echo "convert" >convert
+
+unconvert: 
+	if exist complete.c~ del complete.c
+	if exist editline.c~ del editline.c
+	if exist sysdos.c~ del sysdos.c
+	if exist editline.h~ del editline.h
+	if exist edlproto.h~ del edlproto.h
+	if exist msdos.h~ del msdos.h
+	if exist unix.h~ del unix.h
+	rename *.c~ *.c
+	rename *.h~ *.h
+	$(RM) convert
+
+lint:
+	$(LINT) -I.. $(OPTS) $(SRCS) >lint.all
+
+depend:
+	$(CC) -MM -I.. $(OPTS) $(SRCS) testit.c >depend
+
+editline.o: editline.c editline.h msdos.h edlproto.h ../reader.h
+complete.o: complete.c editline.h msdos.h edlproto.h
+sysdos.o: sysdos.c editline.h msdos.h
+testit.o: testit.c editline.h msdos.h edlproto.h
+
+# end of Makefile

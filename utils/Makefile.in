@@ -1,0 +1,79 @@
+#
+# Makefile for ATP support utilities and diagnostics 
+# --------------------------------------------------
+
+topdir	= @top_srcdir@
+srcdir	= @srcdir@
+VPATH	= @srcdir@
+DEFS	= @DEFS@
+CC	= @CC@ 
+CFLAGS	= -O $(DEFS)
+LDFLAGS	=
+STRIP	= @STRIP@
+INSTALL	= @INSTALL@
+PERL	= @PERL@
+
+prefix	= @prefix@
+exec_prefix = $(prefix)
+bindir	= $(exec_prefix)/bin
+mandir	= $(prefix)/man/man1
+
+bin_prm	= 755
+bin_own	= @bin_own@
+bin_grp	= @bin_grp@
+man_prm	= 644
+man_own	= @man_own@
+man_grp	= @man_grp@
+
+.PHONY  : all install uninstall clean mostlyclean distclean unconvert
+
+all: ansi2knr atpdiag rot13
+
+atpdiag: atpdiag.in
+	sed -e 1,@NOBANG@d -e '/@NOTUX@/d' -e "s%@PERLPATH@%$(PERL)%"\
+	 -e 's///' $(srcdir)/atpdiag.in >atpdiag.tmp
+	mv atpdiag.tmp atpdiag
+	chmod 755 atpdiag
+
+ansi2knr: ansi2knr.o
+	$(CC) -o ansi2knr ansi2knr.o $(LDFLAGS)
+
+rot13:  @ATPCNVR@ rot13.o
+	$(CC) -o rot13 rot13.o $(LDFLAGS)
+
+convert: ansi2knr
+	./ansi2knr $(srcdir)/rot13.c >ansi.tmp
+	mv $(srcdir)/rot13.c $(srcdir)/rot13.c~ 
+	mv ansi.tmp $(srcdir)/rot13.c
+	touch convert
+
+unconvert: 
+	if test -f $(srcdir)/rot13.c~ ; then \
+	mv $(srcdir)/rot13.c~ $(srcdir)/rot13.c ; \
+	rm -f convert ; fi
+
+install: ansi2knr ansi2knr.1 atpdiag atpdiag.1 rot13 rot13.1
+	$(STRIP) rot13 ansi2knr
+	$(INSTALL) -m $(bin_prm) -o $(bin_own) -g $(bin_grp) rot13 $(bindir)
+	$(INSTALL) -m $(bin_prm) -o $(bin_own) -g $(bin_grp) ansi2knr $(bindir)
+	$(INSTALL) -m $(bin_prm) -o $(bin_own) -g $(bin_grp) atpdiag  $(bindir)
+	$(INSTALL) -m $(man_prm) -o $(man_own) -g $(man_grp) $(topdir)/docs/rot13.1 $(mandir)
+	$(INSTALL) -m $(man_prm) -o $(man_own) -g $(man_grp) $(topdir)/docs/ansi2knr.1 $(mandir)
+	$(INSTALL) -m $(man_prm) -o $(man_own) -g $(man_grp) $(topdir)/docs/atpdiag.1 $(mandir)
+
+uninstall:
+	rm -f $(bindir)/ansi2knr $(mandir)/ansi2knr.1
+	rm -f $(bindir)/atpdiag $(mandir)/atpdiag.1
+	rm -f $(bindir)/rot13 $(mandir)/rot13.1
+
+clean:
+	rm -f ansi2knr core erro *.o atpdiag.tmp rot13
+
+mostlyclean: clean
+	rm -f atpdiag
+
+distclean: clean
+	rm -f Makefile atpdiag atpdiag.cmd atpdiag.bat *.obj *.exe
+
+ansi2knr.o: ansi2knr.c stdio_.h string_.h malloc_.h
+rot13.o: rot13.c

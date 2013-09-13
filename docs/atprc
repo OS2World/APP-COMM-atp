@@ -1,0 +1,181 @@
+# ATP configuration file.
+# NOTE: a SPACE must reside on either side of the `=' sign!
+#
+# Most of this needs no explanation. Be sure to set the proper paths
+# for you incoming mail and outgoing replies.
+# -----------------------------------------------------------------------
+# You must put your name here.
+#
+User = Your Name 
+# -----------------------------------------------------------------------
+# Define the editor you wish to use for replies:
+#
+#editor = vde
+editor = vile
+# -----------------------------------------------------------------------
+# Here is where we set the paths to the directories which will hold your
+# QWK mail packets and replies. Please enter the correct path information
+# on the lines below. Use absolute paths from the `/' root directory:
+#
+mail  =  /var/spool
+reply =  /var/spool
+# -----------------------------------------------------------------------
+# Normally you don't need to change the next lines, but PLEASE
+# get a current version of zip and unzip. Info-Zip Unzip 5.1 and
+# Zip 1.9 are current. 
+#
+archiver = zip -jk
+unarchiver = unzip -Lxjo
+# -----------------------------------------------------------------------
+# Specify your spelling checker. Ispell is recommended for Unix systems
+# and OS/2. ShareSpell could be used under MS-DOS. Ispell is available
+# from prep.ai.mit.edu:/pub/gnu
+#
+speller = ispell
+#speller = ss
+# -----------------------------------------------------------------------
+# The following lines tell ATP about your terminal. Generally, you will
+# want to leave ansi on. ATP is optimized for ANSI consoles, so there
+# are no guarantees about setting ansi off. Cursor placement is dependant
+# on ANSI positioning sequences. ATP will support color too. If you have
+# a monochrome terminal you may find that setting color to off gives
+# a more readable screen. Experiment and see.
+# 
+ansi = on
+color = on
+# -----------------------------------------------------------------------
+# Normally, ATP will try to determine your screen width and length
+# automatically. However, if there is a problem, ATP will fall back
+# on these values. Set "screenlen" to the length of your screen and
+# set "screencol" to the width of your screen.
+#
+screenlen = 25
+screencol = 80
+# -----------------------------------------------------------------------
+# The following option tells ATP about your terminal's character set.
+# You have 3 choices: latin1, msdos, or, 7bit. If your terminal
+# can display foreign language characters choose either "latin1" or
+# "msdos". Otherwise choose 7bit. Linux uses latin1. By choosing msdos
+# ATP will not perform any character translation when displaying messages.
+# Note that even if your operating system runs on a PC, it may not use
+# the DOS character codes (Linux uses "latin1" for example). If your terminal 
+# can not display 8 bit characters, please tell ATP by choosing "7bit".
+# If this following character in the brackets looks like an "A" with
+# 2 dots then choose "latin1":
+#                                 [ Ä ] <<< test character.
+#
+# If it looks like a long dash or horizontal bar then choose "msdos".
+# If it looks like a "D" then choose 7bit. This test is not absolutely
+# conclusive in that it depends on your editor's ability to display your
+# system's character set properly. Some Unix editors will not display
+# 8 bit characters even though the system is capable of it. If this
+# is the case you may want to try testing this from the Unix command
+# line with:
+#              echo '\304'
+#       
+# Here again, some command shells may not display all characters that your
+# terminal is capable of displaying. 
+#
+charset = latin1 
+# charset = msdos
+# charset = 7bit
+# 
+# -----------------------------------------------------------------------
+# The next option is useful if your terminal or console is compatible with
+# VT102 terminal line-graphics. Most QWK mail is generated under MS-DOS.
+# Unfortunately, DOS graphics characters aren't portable to most non-DOS
+# systems. However if your hardware is VT102 compatible, this option will
+# will give you emulation of the DOS graphics set. Linux users will
+# probably want this option set to "on". By typing "graphics" at the
+# ATP command line you may toggle this variable on and off. When toggled
+# to the on state, a graphics rectangle should be displayed on your console
+# as a simple test of whether this option is right for you. Use this test
+# if you are in doubt. 
+# 
+graphics = on
+# ----------------------------------------------------------------------
+# ATP uses the following Unix command string to list QWK packets.
+# You may delete this if you want. ATP will then default to a 
+# simpler version. When using this version it will put you into `less'
+# which is the GNU version of `more'. To return to ATP enter `q'.
+# You can also use the keys `u' and `d' to scroll through the QWK list.
+# Edit this line anyway you like to cutomize the `qlist' command.
+# If you find that this command won't work, make sure you have the
+# Unix utilities `cut' and `less' in your path.
+#
+qlist = ls -lt *.qw? | cut -c 33- | less
+#
+# Here is one for MS_DOS or OS/2:
+# qlist = dir *.qw?
+# ------------------------------------------------------------------------
+# ATP uses the following Unix command string to list bulletins. 
+# You may delete this if you want. ATP will then default to a 
+# simpler version. This works like the above "qlist" command. 
+#
+blist = ls -lt blt* | cut -c 34- | less
+#
+# Here is one for MS_DOS or OS/2:
+# blist = dir blt-*.*
+# ------------------------------------------------------------------------
+# If you want Fido style taglines by default enter `tagstyle = fido' below.
+# Of course you can always toggle between tagline styles by typing `fido'
+# at ATP's main prompt.
+# 
+tagstyle = fido 
+#tagstyle = normal
+# ------------------------------------------------------------------------
+# the following is known as your "persistent" tagline.
+#
+tagline =   Linux, the choice of a GNU generation. 
+#
+# ------------------------------------------------------------------------
+# By default, ATP will randomly choose a tagline for your replies from the
+# file "taglines.atp" which should reside in the same directory as atprc.
+# This option can be turned off at the ATP command line, or you may set it
+# so that it defaults to off by defining "autotag = off" below:
+#
+autotag = on
+#
+# -----------------------------------------------------------------------
+# If you need the ATP work directory to be on some particular path
+# or drive specify it here. This is the directory where temporary
+# files are created and destroyed.
+#
+workpath = /tmp
+# Here is an example for MS_DOS:
+# workpath = D:\tmp
+#
+# -----------------------------------------------------------------------
+# Under ATP there is a "clean" command that will put you into maintenance
+# mode for your message bases. One of the options is to truncate a 
+# message base to the most recent messages. The following option sets the
+# default truncation length. This option can be changed during the
+# maintenance process if the need should arise.
+#
+truncate = 50
+#
+# -----------------------------------------------------------------------
+# The BBS known as PCBoard supports long subject lines as of PCB 1.5.
+# If you would like to have long subject lines then set the following
+# option on. Note that not all QWK readers will be able to read your entire
+# subject line because most readers are limited to 25 characters. But
+# generally there should be no problem. Note that if you use the RIME
+# network that you should not use a long subject line when entering a
+# routed message, i.e. a message where the first line must read something
+# like ->156<-
+#
+pcb = on
+#
+# -----------------------------------------------------------------------
+# When replying to a message, ATP generates a reply header which
+# mentions the author of the message being responded to. If you wish
+# to have no headers then set the following option off.
+#
+header = on
+#
+# -----------------------------------------------------------------------
+# If you prefer silent operation set bell = off
+bell = off
+#
+# -------------------- end of configuration script ----------------------
+

@@ -1,0 +1,10 @@
+@echo off
+
+::       simulates Unix command rm
+
+:next1
+if exist %1 del %1
+shift 
+if not "%1" == "" goto next1
+
+:endo

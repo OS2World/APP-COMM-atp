@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# This utility will extract function descritions from the ATP source tree.
+#
+case $1 in
+     -a|--all) # this will find static and external functions in the ATP C source tree.
+           egrep -e "^ \* [^ ].+(, | - )" $2 
+	   ;;
+     -s|--static) # this will find static functions in the ATP C source tree.
+           egrep -e "^ \* [^ ].+, " $2 
+           ;;
+     -e|--extern) # this will find external functions in the ATP C source tree.
+           egrep -e "^ \* [^ ].+ - " $2 
+           ;;
+     -h|--help)   
+          echo "Usage: findfunc  OPTION  FILENAME"
+     	  echo " "
+	  echo "  -h, --help       display this screen"
+	  echo "  -e, --extern     extract ATP external function descriptions"
+	  echo "  -s, --static     extract ATP static function descriptions"
+	  echo "  -a, --all        extract all function descriptions"
+	  ;;
+      *)
+          echo "Try \`funcfind --help' for more information."
+	  ;;
+esac

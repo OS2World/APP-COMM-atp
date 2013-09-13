@@ -1,0 +1,51 @@
+!include <ntwin32.mak>
+
+# Turn off MIPS Debugging Support
+
+!if "$(CPU)" == "MIPS"
+cdebug = 
+cvtdebug = 
+linkdebug =
+!endif
+
+cflags = $(cflags) -DHAVE_STDLIB -DANSI_ARROWS -DHIDE -DUNIQUE_HISTORY
+
+SRC = editline.c complete.c sysdos.c
+OBJ = editline.obj complete.obj sysdos.obj
+
+
+#   *Implicit Rules*
+.c.obj:
+  $(cc) $(cdebug) $(cflags) $(cvars) $*.c > $*.err
+  @del $*.err
+  
+
+#   *Explicit Rules*
+
+all: libed32.lib 
+
+libed32.lib: $(OBJ)
+  -@del libed32.lib > nul
+  $(cvtobj) $(cvtdebug) *.obj
+  lib -machine:i386 -subsystem:console -out:libed32.lib $**
+
+
+#  *File dependencies*
+
+editline.obj  : editline.h edlproto.h msdos.h
+
+complete.obj  : editline.h msdos.h
+
+sysdos.obj    : editline.h msdos.h
+
+clean:
+	del *.obj 
+	del libed32.lib 
+	
+clobber:
+	del *.obj 
+	del *.bak
+	del *.lib
+
+#
+#------------------------------- end of makefile ---------------------------

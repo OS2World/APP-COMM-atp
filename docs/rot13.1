@@ -1,0 +1,64 @@
+.TH ROT13 1 "01 Sept 1994" "Linux" "Linux Programmer's Manual"
+.SH NAME
+rot13 \- shroud text with simple rot-13 cypher
+.SH SYNOPSIS
+.B rot13 
+[input [output]]
+.SH DESCRIPTION
+This manual page
+documents 
+the
+.BR rot13
+text filter.
+If no filenames are specified, 
+.B rot13 
+reads from stdin and writes to
+stdout.  If one filename is specified, 
+.B rot13 
+reads from that file and writes to stdout.  If two filenames are specified, 
+.B rot13 
+reads from the first file and writes to the second file. You may use
+.B rot13
+inside the vi editor just as you would other filters, e.g. fmt.
+.PP
+.B Rot13
+performs Usenet-standard rot-13
+encryption.  This is done by taking the input letter and shifting it
+left by 13 characters, so an A becomes an N, a B becomes an O, and so
+forth. Applying
+.B rot13
+a second time restores the original text. The encrypted version of the
+sentence `The quick brown fox jumps over the lazy dog.' looks like this:
+.nf
+
+\	Gur dhvpx oebja sbk whzcf bire gur ynml qbt.
+
+.fi
+.PP
+Note that rot-13 is obviously not secure encryption. The main purpose of 
+.B rot13
+is to shield sensitive eyes from potentially offensive or disturbing
+public messages. Most news readers provide a command to decode 
+.B rot13 
+messages.  For example, the tin news reader uses the command 'd'.
+.SH AUTHOR 
+The original author is Marc Unangst.  Various ways of contacting him are:
+.nf
+\	mju@mudos.ann-arbor.mi.us
+\	...!umich!leebai!mudos!mju
+\	Marc Unangst of 1:2200/129.0@fidonet.org
+.fi
+.PP
+The 1994 update was done by Thomas McWilliams. See Changelog in the
+source distribution for details.
+.SH COPYING
+Distribution permitted under the terms of the GNU General Public
+License, version 2 (or later versions at your preference). Copies
+of this agreement are available from:
+.nf
+
+\	Free Software Foundation, Inc., 
+\	675 Mass Ave, 
+\	Cambridge, MA 02139, USA.
+
+.fi

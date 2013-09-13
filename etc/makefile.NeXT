@@ -1,0 +1,108 @@
+# Makefile for NeXT version of ATP Dec 12, 1993 (read all this stuff first!)
+# This makefile works best with GNU MAKE!
+# -------------------------------------------------------------------------
+# ATP is written in standard ANSI C. ATP is command line driven and should
+# work with most any terminal, although ANSI and vt100 terminals work best.
+# 
+CC = cc
+LD = ld
+LINT = lint
+DBMALLOC = dbmalloc 
+#DBMALLOC = checker 
+#
+#LDFLAGS =  -static
+#WALL = -Wall -Wshadow -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion \
+#       -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wformat
+# WALL = -Wall
+WALL =
+#
+# Attention les francophones!
+# Si vous voulez, effacez -DENGLISH dessous et substituez -DFRENCH 
+#
+#CFLAGS = -O2 -DFRENCH  $(WALL)
+#CFLAGS = -DENGLISH $(WALL) 
+CFLAGS = -O2 -DENGLISH $(WALL)
+#CFLAGS = -g -O2 -DENGLISH -DATPDBG $(WALL) 
+#OFLAGS = -fomit-frame-pointer -finline-functions
+OFLAGS = -D_POSIX_SOURCE
+STRIP = strip
+#STRIP = ls -l  #define this one if you don't need or have strip
+#
+HEADERS = readlib.h makemail.h system.h ansi.h qlib.h reader.h 
+#
+OBJECTS = read.o readlib.o makemail.o system.o ansi.o qlib.o text.o chosetag.o
+#
+SRC = read.c readlib.c makemail.c system.c ansi.c qlib.c text.c chosetag.c
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(OFLAGS) $*.c
+
+#
+#
+all:	atp
+
+atp:  $(OBJECTS) Makefile eline 
+	$(CC) $(OFLAGS) -o $@ $(OBJECTS) editline/libedit.a -ltermcap 
+	$(STRIP) $@
+	
+atpm:  $(OBJECTS) Makefile eline 
+	$(CC) -o $@ $(OBJECTS) -l$(DBMALLOC) editline/libedit.a -ltermcap 
+	$(STRIP) $@
+	
+static: $(OBJECTS) Makefile eline
+	$(CC) $(LDFLAGS) -o stap $(OBJECTS) editline/libedit.a -ltermcap -static
+	$(STRIP) stap
+
+callmap: 
+	calls -i $(CFLAGS) -f main $(SRC) > callmap
+
+#$(OBJECTS):  Makefile
+
+chosetag.o : chosetag.c reader.h 
+
+ansi.o : ansi.c ansi.h
+
+makemail.o : makemail.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+qlib.o : qlib.c system.h ansi.h qlib.h reader.h readlib.h 
+
+read.o : read.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+readlib.o : readlib.c system.h ansi.h makemail.h qlib.h reader.h readlib.h 
+
+system.o : system.c system.h ansi.h 
+
+text.o : text.c system.h ansi.h reader.h 
+
+#
+#
+#editline/libedit.a:
+eline:
+		cd editline ; $(MAKE) -f makefile.NeXT all
+
+atp.doc: docs/atp.1
+	groff -man docs/atp.1 | sed -e "s/.//g" > docs/atp.doc
+
+edl.doc:
+	groff -man Docs/editline.3 | sed -e "s/.//g" > Docs/editline.doc
+	
+docs: atp.doc edl.doc
+
+clean:
+	rm -f *.o core
+	cd editline ; $(MAKE) -f makefile.NeXT clean
+
+clobber:
+	-rm -f *.o core atp libedit.a
+	cd editline ; $(MAKE) -f makefile.NeXT clean
+
+manifest:
+	ls -l ./* > Manifest	
+
+lint:
+	lint -p -Dunix -Dlinux -DENGLISH  *.c >atplint	
+
+extract:
+	cextract -Dunix -Dlinux -DENGLISH $(SRC) >test.h
+#
+#-------------------------end of makefile------------------------------------

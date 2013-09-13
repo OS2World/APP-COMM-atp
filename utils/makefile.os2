@@ -1,0 +1,75 @@
+# Makefile ATP utilities
+# Tested with DMAKE 4.00 and GNU MAKE 3.75 
+
+DEFS	= 
+CC	= gcc 
+#CFLAGS	= -O2 -fomit-frame-pointer
+CFLAGS	= -O
+LDFLAGS	= -s
+STRIP	= ls -l
+INSTALL	= cp
+PERL	= perl
+SHELL	= c:/os2/cmd.exe
+BSHELL	= cmd.exe /c
+errhand	= 2>nul
+RM	= - $(BSHELL) del /n $(errhand)
+
+prefix	= /usr/local
+exec_prefix = $(prefix)
+bindir	= $(exec_prefix)/bin
+mandir	= $(prefix)/man/man1
+
+#manown	= -o daemon -g daemon
+#binown	= -o bin -g bin
+
+all: ansi2knr.exe rot13.exe atpdiag.cmd
+
+atpdiag.cmd: atpdiag.in
+	$(BSHELL) sed -e 1,4d -e 6,7d -e /@UNIX@/d -e /@DOS@/d -e s%@PERLPATH@%$(PERL)% atpdiag.in >atpdiag.tmp
+	mv atpdiag.tmp $@ 
+
+ansi2knr.exe: ansi2knr.c stdio_.h string_.h malloc_.h
+	$(CC) $(CFLAGS) -o $@ ansi2knr.c $(LDFLAGS)
+
+rot13.exe:   rot13.c
+	$(CC) $(CFLAGS) $(DEFS) -o $@ rot13.c $(LDFLAGS)
+
+convert: ansi2knr
+	./ansi2knr rot13.c >ansi.tmp
+	mv rot13.c rot13.c~ 
+	mv ansi.tmp rot13.c
+	touch convert
+
+unconvert:
+	mv rot13.c~ rot13.c
+	$(RM) convert
+
+install: all ansi2knr.1 atpdiag.1 rot13.1
+	@$(STRIP) rot13.exe ansi2knr.exe
+	$(INSTALL) $(binown) rot13.exe $(bindir)
+	$(INSTALL) $(manown) rot13.1 $(mandir)
+	$(INSTALL) $(binown) ansi2knr.exe $(bindir)
+	$(INSTALL) $(manown) ansi2knr.1 $(mandir)
+	$(INSTALL) $(binown) atpdiag.cmd $(bindir)
+	$(INSTALL) $(manown) atpdiag.1 $(mandir)
+
+uninstall:
+	$(RM) $(bindir)/ansi2knr.exe $(mandir)/ansi2knr.1
+	$(RM) $(bindir)/atpdiag.cmd $(mandir)/atpdiag.1
+	$(RM) $(bindir)/rot13.exe $(mandir)/rot13.1
+
+clean: .FORCE
+	$(RM) ansi2knr.exe core erro *.o atpdiag.tmp rot13.exe clean
+
+mostlyclean: clean
+	$(RM) atpdiag.cmd
+
+distclean: clean
+	$(RM) atpdiag.cmd atpdiag atpdiag.bat *.cof
+
+clobber: clean
+	$(RM) atpdiag.cmd atpdiag atpdiag.bat *.cof *.bak
+
+.FORCE:
+	@$(BSHELL) rem
+

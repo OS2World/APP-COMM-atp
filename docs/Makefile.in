@@ -1,0 +1,133 @@
+# Note that atp.1 must be pre-processed with tbl or gtbl. 
+
+srcdir = @srcdir@
+VPATH  = @srcdir@
+SRC    = atp.1 atpdiag.1 rot13.1 editline.3
+
+# --------------------------------------------------------------
+# text formatting commands to generate plain text from man pages
+# --------------------------------------------------------------
+TBL	= @A_TBL@
+ROFF	= @ROFF@
+SCOL	= sed -e "s/.//g"
+UCOL	= @A_UCOL@
+COL	= $(@A_COL@)
+
+# --------
+# targets
+# -------- 
+
+all:
+	@echo "Please read the Makefile and chose a target based on"
+	@echo "your particular situation.  Some of the targets are:"
+	@echo "txt, doc, dvi, ps, and gs."
+
+# make postsrcipt and plain text docs
+textall: ps txt
+	
+# very plain text output ---------------------------------------------------
+
+txt: atp.txt atpdiag.txt editline.txt rot13.txt
+
+atp.txt: atp.1
+	$(TBL) $? | $(ROFF) @A_DEVRF@ -man | $(COL) > atp.txt
+
+atpdiag.txt: atpdiag.1
+	$(ROFF) @A_DEVRF@ -man $? | $(COL) > atpdiag.txt
+
+rot13.txt: rot13.1
+	$(ROFF) @A_DEVRF@ -man $? | $(COL) > rot13.txt
+
+editline.txt: editline.3
+	$(ROFF) @A_DEVRF@ -man $? | $(COL) > editline.txt
+
+# fancier plain text output good for simple dot matrix printers ------------- 
+
+doc: atp.doc atpdiag.doc editline.doc rot13.doc
+
+atp.doc: atp.1
+	$(TBL) $? | $(ROFF) @A_DEVRF@ -man > atp.doc
+
+atpdiag.doc: atpdiag.1
+	$(ROFF) @A_DEVRF@ -man $? > atpdiag.doc
+
+rot13.doc: rot13.1
+	$(ROFF) @A_DEVRF@ -man $? > rot13.doc
+
+editline.doc: editline.3
+	$(ROFF) @A_DEVRF@ -man $? > editline.doc
+
+
+# dvi output ----------------------------------------------------------------
+
+dvi: atp.dvi atpdiag.dvi editline.dvi rot13.dvi
+
+atp.dvi: atp.1
+	$(TBL) $? | $(ROFF) -Tdvi -man > atp.dvi
+
+atpdiag.dvi: atpdiag.1
+	$(ROFF) -Tdvi -man $? > atpdiag.dvi
+
+rot13.dvi: rot13.1
+	$(ROFF) -Tdvi -man $? > rot13.dvi
+
+editline.dvi: editline.3
+	$(ROFF) -Tdvi -man $? > editline.dvi
+
+
+# postscript output ---------------------------------------------------------
+ps : @PS_METHOD@
+
+# generate postscript via dvips
+ps_dvips: dvi
+	dvips -f < atp.dvi      >atp.ps
+	dvips -f < atpdiag.dvi  >atpdiag.ps
+	dvips -f < rot13.dvi    >rot13.ps
+	dvips -f < editline.dvi >editline.ps
+
+# alternate way to generate postscript output
+ps_groff:
+	$(TBL) $(srcdir)/atp.1 | $(ROFF) -Tps -man > atp.ps
+	$(ROFF) -Tps -man $(srcdir)/atpdiag.1  > atpdiag.ps
+	$(ROFF) -Tps -man $(srcdir)/rot13.1    >rot13.ps
+	$(ROFF) -Tps -man $(srcdir)/editline.3 >editline.ps
+
+# ghostscript output for your default gs output device ----------------------
+gs: atp_end.ps ps
+	gs -dNOPAUSE -sOutputFile=atp-gs-%d atp.ps atp_end.ps
+
+# ghostscript output tweaked for one of my flakey printers
+myday: atp_end.ps ps
+	gs -dNOPAUSE -dDEVICEHEIGHTPOINTS=770 -sOutputFile=atp-gs.lj \
+	$(srcdir)/atp.ps $(srcdir)/atp_end.ps
+
+atp_end.ps:
+	echo "quit" >atp_end.ps
+
+# view atp.1 on crt ---------------------------------------------------------
+view:
+	$(TBL) $(srcdir)/atp.1 | $(ROFF) @A_DEVRF@ -man | @PAGER@
+
+# translate unix files to msdos text format
+u2d: textall
+	for EACH_FILE in *txt ; do \
+	unix2dos $$EACH_FILE ; \
+	mv $$EACH_FILE $$EACH_FILE.dos ; done
+
+info:
+	@echo " "
+	@echo "Sorry, info format not supported yet."
+	@echo " "
+
+# remove files that can be re-made easily
+clean:
+	rm -f atp-gs-* *.ps *.dvi *.doc *.txt *.txt.dos atp_end.ps \
+	taglines.atp.dos CHANGES.dos COPYING.dos
+
+distclean: clean
+	rm -f Makefile
+
+xlatlist = CHANGES COPYING atp.txt atpdiag.txt editline.txt rot13.txt taglines.atp
+xlate:  $(xlatlist)
+	$(srcdir)/txt-to-dos.sh $(xlatlist)
+
